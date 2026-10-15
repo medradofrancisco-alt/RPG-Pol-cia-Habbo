@@ -1,15 +1,12 @@
 {
-  "type": "module",
-  "name": "habbo-policia-teste",
+  "name": "rpg-policia-habbo",
   "version": "1.0.0",
-  "description": "Servidor de testes para a API do Habbo",
-  "main": "server.js",
+  "description": "API de testes para RPG Policial",
+  "main": "servidor.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node servidor.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "json-with-bigint": "^1.0.2"
+    "express": "^4.19.2"
   }
 }

@@ -3,42 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Polícia Habbo</title>
+    <title>RPG Polícia - Painel de Autenticação</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #0f172a;
             color: #f8fafc;
-            text-align: center;
-            padding-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #1e293b;
+        .card {
+            background-color: #1e293b;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 350px;
+            text-align: center;
         }
-        h1 { color: #38bdf8; }
-        .status {
-            display: inline-block;
-            background: #22c55e;
+        h2 { margin-bottom: 20px; color: #38bdf8; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #0f172a;
+            border: 1px solid #475569;
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-top: 15px;
+            border-radius: 6px;
+            box-sizing: border-box;
         }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0284c7;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #0369a1; }
+        .hidden { display: none; }
+        .codigo-box {
+            background-color: #334155;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #facc15;
+            margin: 15px 0;
+        }
+        .msg { font-size: 14px; margin-top: 10px; }
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Polícia RPG
-        </h1>
-        <p>Sistema de Automação e Web API para Habbo Hotel</p>
-        <div class="status">● Servidor Online na Nuvem</div>
-        <p style="margin-top: 25px; color: #94a3b8; font-size: 14px;">Painel operacional em desenvolvimento.</p>
+
+    <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
+    <div id="login-container" class="card">
+        <h2>Autenticação Habbo</h2>
+        <p style="font-size: 14px; color: #94a3b8;">Insira o seu nick para verificar a identidade via missão.</p>
+        
+        <div id="passo-1">
+            <input type="text" id="usuario" placeholder="Seu nick no Habbo">
+            <button onclick="gerarCodigo()">Avançar</button>
+        </div>
+
+        <div id="passo-2" class="hidden">
+            <p style="font-size: 13px;">Cole este código na sua <b>missão (motto)</b> no Habbo:</p>
+            <div id="codigo-gerado" class="codigo-box">...</div>
+            <button onclick="verificarLogin()">Já coloquei na missão</button>
+            <button onclick="voltarPasso1()" style="background-color: #475569; margin-top: 5px;">Voltar</button>
+        </div>
+
+        <p id="mensagem-status" class="msg"></p>
     </div>
+
+    <!-- PAINEL PRINCIPAL (Oculto até logar) -->
+    <div id="painel-principal" class="card hidden" style="width: 500px;">
+        <h2>Painel RPG Polícia</h2>
+        <div id="perfil-info" style="margin: 20px 0; display: flex; align-items: center; gap: 15px; text-align: left;">
+            <img id="avatar-habbo" src="" alt="Avatar" style="width: 64px; height: 64px;">
+            <div>
+                <p style="margin: 0; font-weight: bold; font-size: 16px;" id="nome-habbo"></p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #94a3b8;" id="missao-habbo"></p>
+            </div>
+        </div>
+        <p class="success">Autenticado com sucesso via API do Habbo!</p>
+        <button onclick="logout()" style="background-color: #ef4444;">Sair / Trocar Conta</button>
+    </div>
+
+    <script>
+        let codigoAleatorio = "";
+        let usuarioDigitado = "";
+
+        function gerarCodigo() {
+            usuarioDigitado = document.getElementById('usuario').value.trim();
+            const status = document.getElementById('mensagem-status');
+
+            if (!usuarioDigitado) {
+                status.className = "msg error";
+                status.innerText = "Por favor, digite o seu nick!";
+                return;
+            }
+
+            // Gera um código único de 4 dígitos aleatórios
+            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('codigo-gerado').innerText = codigoAleatorio;
+
+            // Alterna os passos visuais
+            document.getElementById('passo-1').classList.add('hidden');
+            document.getElementById('passo-2').classList.remove('hidden');
+            status.innerText = "";
+        }
+
+        function voltarPasso1() {
+            document.getElementById('passo-2').classList.add('hidden');
+            document.getElementById('passo-1').classList.remove('hidden');
+            document.getElementById('mensagem-status').innerText = "";
+        }
+
+        async function verificarLogin() {
+            const status = document.getElementById('mensagem-status');
+            status.className = "msg";
+            status.innerText = "A verificar missão no Habbo...";
+
+            try {
+                const resposta = await fetch('/api/verificar-habbo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAleatorio })
+                });
+
+                const resultado = await resposta.json();
+
+                if (resposta.ok && resultado.sucesso) {
+                    // Oculta login e mostra o painel principal
+                    document.getElementById('login-container').classList.add('hidden');
+                    document.getElementById('painel-principal').classList.remove('hidden');
+
+                    // Preenche dados do avatar (usando a ferramenta oficial de avatar do habbo)
+                    document.getElementById('nome-habbo').innerText = resultado.dadosHabbo.nome;
+                    document.getElementById('missao-habbo').innerText = `Missão: ${resultado.dadosHabbo.missao}`;
+                    document.getElementById('avatar-habbo').src = `https://www.habbo.com.br/habbo-imaging/avatarimage?figure=${resultado.dadosHabbo.avatar}&direction=2&head_direction=2&action=wav&size=l`;
+                } else {
+                    status.className = "msg error";
+                    status.innerText = resultado.erro || "Falha ao validar a missão.";
+                }
+            } catch (err) {
+                status.className = "msg error";
+                status.innerText = "Erro de conexão com o servidor.";
+            }
+        }
+
+        function logout() {
+            document.getElementById('painel-principal').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('usuario').value = "";
+            voltarPasso1();
+        }
+    </script>
 </body>
 </html>

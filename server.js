@@ -24,7 +24,7 @@ app.post('/api/verificar-habbo', async (req, res) => {
         const missaoAtual = dados.motto;
 
         if (missaoAtual.includes(codigoEsperado)) {
-            return.status(200).json({ 
+            return res.status(200).json({ 
                 sucesso: true, 
                 mensagem: "Identidade verificada com sucesso!",
                 dadosHabbo: {
@@ -34,7 +34,7 @@ app.post('/api/verificar-habbo', async (req, res) => {
                 }
             });
         } else {
-            return.status(400).json({ 
+            return res.status(400).json({ 
                 sucesso: false, 
                 erro: `O código não foi encontrado na sua missão. Missão atual: "${missaoAtual}"` 
             });

@@ -317,7 +317,7 @@
                 <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
                     <input type="checkbox" id="manter-conectado"> Manter conectado
                 </label>
-                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;">Gerar Código</button>
+                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;" onclick="gerarCodigo()">Gerar Código</button>
             </div>
 
             <div id="login-passo-2" class="hidden">
@@ -325,17 +325,17 @@
                 
                 <div class="code-container">
                     <span id="codigo-gerado" class="code-box">RPG-0000</span>
-                    <button type="button" id="btn-copiar" class="copy-btn">Copiar</button>
+                    <button type="button" id="btn-copiar" class="copy-btn" onclick="copiarCodigo()">Copiar</button>
                 </div>
 
-                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;">Confirmar Missão</button>
-                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;">Voltar</button>
+                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;" onclick="verificarLogin()">Confirmar Missão</button>
+                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;" onclick="voltarPasso1()">Voltar</button>
             </div>
 
             <!-- QUADRO DO FRANK AVISANDO ERROS E DICAS -->
-            <div id="frank-box" class="frank-container hidden">
+            <div id="frank-box" class="frank-container">
                 <img src="https://images.habbo.com/c_images/album1584/FRANK_SAY.png" alt="Frank Habbo" class="frank-img">
-                <div id="frank-msg" class="frank-bubble">Seja bem-vindo, oficial! Digite seu nick acima.</div>
+                <div id="frank-msg" class="frank-bubble">Seja bem-vindo, oficial! Digite seu nick do Habbo acima para começar.</div>
             </div>
         </div>
 
@@ -392,13 +392,12 @@
             var frankBox = document.getElementById('frank-box');
             var frankMsg = document.getElementById('frank-msg');
             if (frankBox && frankMsg) {
-                frankBox.classList.remove('hidden');
                 frankMsg.innerText = texto;
                 frankMsg.style.color = eErro ? '#f87171' : '#38bdf8';
             }
         }
 
-        window.gerarCodigo = function() {
+        function gerarCodigo() {
             var inputEl = document.getElementById('usuario-input');
             usuarioDigitado = inputEl ? inputEl.value.trim() : "";
 
@@ -413,10 +412,10 @@
 
             document.getElementById('login-passo-1').classList.add('hidden');
             document.getElementById('login-passo-2').classList.remove('hidden');
-            falarFrank("Agora copie o código acima e cole na missão do seu perfil no Habbo!", false);
-        };
+            falarFrank("Agora copie o código acima e cole na sua missão do Habbo!", false);
+        }
 
-        window.copiarCodigo = function() {
+        function copiarCodigo() {
             var btnCopiar = document.getElementById('btn-copiar');
             if (!codigoAleatorio) return;
 
@@ -447,9 +446,19 @@
                     }, 2000);
                 }
             }
-        };
+        }
 
-        window.voltarPasso1 = function() {
+        function voltarPasso1() {
             document.getElementById('login-passo-2').classList.add('hidden');
             document.getElementById('login-passo-1').classList.remove('hidden');
-            falarFrank("
+            falarFrank("Digite seu nick do Habbo para iniciar o acesso.", false);
+        }
+
+        async function verificarLogin() {
+            falarFrank("Aguarde... Estou consultando os registros do Habbo!", false);
+
+            try {
+                var res = await fetch('/api/verificar-habbo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAle

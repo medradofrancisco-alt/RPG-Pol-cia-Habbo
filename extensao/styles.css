@@ -1,0 +1,4 @@
+#rpg-hud-overlay {
+    pointer-events: none !important;
+    background: transparent !important;
+}

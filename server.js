@@ -4,11 +4,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Permite o carregamento em extensões e janelas flutuantes de overlay
+// LIBERA O SITE PARA FUNCIONAR EM IFRAMES / EXTENSÕES FLUTUANTES
 app.use((req, res, next) => {
+    res.setHeader("X-Frame-Options", "ALLOWALL");
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    // Desativa restrições que impeçam a inserção em extensões
+    res.removeHeader("Content-Security-Policy");
     next();
 });
 

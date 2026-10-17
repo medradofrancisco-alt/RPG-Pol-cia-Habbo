@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: sans-serif; }
+        .hud-menu {
+            -webkit-app-region: drag; /* Permite arrastar a janelinha pelo menu */
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+        }
+        button {
+            -webkit-app-region: no-drag; /* Permite clicar nos botões */
+            background: #1f1f1f;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        button:hover { background: #2a2a2a; }
+    </style>
+</head>
+<body>
+    <div class="hud-menu">
+        <span style="color: #666; font-size: 11px; cursor: move; user-select: none;">⋮⋮ HUD</span>
+        <button onclick="toggleIlha('perfil', 'perfil.html', 300, 220)">👤 Perfil</button>
+        <button onclick="toggleIlha('punicoes', 'punicoes.html', 320, 250)">⚖️ Punições</button>
+        <button onclick="toggleIlha('manuais', 'manuais.html', 320, 250)">📖 Manuais</button>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function toggleIlha(name, path, width, height) {
+            ipcRenderer.send('toggle-window', {
+                name: name,
+                path: path,
+                width: width,
+                height: height,
+                x: window.screenX + 50,
+                y: window.screenY + 70
+            });
+        }
+    </script>
+</body>
+</html>

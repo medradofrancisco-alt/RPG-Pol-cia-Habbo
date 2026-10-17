@@ -1,358 +1,56 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Polícia - Painel Principal</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(express.static('public'));
+
+// Rota de verificação do Habbo (Login por missão)
+app.post('/api/verificar-habbo', async (req, res) => {
+    const { usuario, codigoEsperado } = req.body;
+
+    if (!usuario || !codigoEsperado) {
+        return res.status(400).json({ erro: "Usuário e código são obrigatórios." });
+    }
+
+    try {
+        const resposta = await fetch(`https://www.habbo.com.br/api/public/users?name=${encodeURIComponent(usuario)}`);
+        
+        if (!resposta.ok) {
+            return res.status(404).json({ erro: "Usuário não encontrado no Habbo." });
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            color: #1e293b;
-            overflow: hidden;
-            height: 100vh;
-        }
+        const dados = await resposta.json();
+        const missaoAtual = dados.motto || "";
 
-        /* BARRA SUPERIOR FLUTUANTE */
-        .top-bar {
-            position: fixed;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 6px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-        }
-
-        .hud-btn {
-            background: #e2e8f0;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .hud-btn:hover {
-            background: #cbd5e1;
-            color: #0f172a;
-        }
-
-        .hud-btn.lock-status {
-            background: #fef08a;
-            color: #854d0e;
-            border-color: #fde047;
-        }
-
-        .hud-btn.logout {
-            background: #fee2e2;
-            color: #991b1b;
-            border-color: #fca5a5;
-        }
-
-        .hud-btn.logout:hover {
-            background: #f87171;
-            color: white;
-        }
-
-        /* CONTAINER HUD */
-        .hud-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .interactive-panel {
-            pointer-events: auto;
-        }
-
-        /* LOGIN OVERLAY */
-        .login-overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 24px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 2000;
-        }
-
-        .login-overlay h3 {
-            margin-top: 0;
-            color: #0284c7;
-            font-size: 18px;
-            letter-spacing: 0.5px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #0f172a;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .code-box {
-            background: #fef9c3;
-            border: 1px dashed #ca8a04;
-            color: #854d0e;
-            padding: 8px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            border-radius: 6px;
-            margin: 10px 0;
-        }
-
-        /* ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) */
-        .profile-island {
-            position: fixed;
-            top: 80px;
-            left: 20px;
-            width: 260px;
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 14px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            cursor: move;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .profile-avatar {
-            width: 54px;
-            height: 54px;
-            background: #e2e8f0;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .profile-name {
-            font-weight: bold;
-            font-size: 15px;
-            color: #0f172a;
-        }
-
-        /* BARRAS DE STATUS */
-        .status-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .status-bar-container {
-            font-size: 11px;
-        }
-
-        .status-label {
-            display: flex;
-            justify-content: space-between;
-            color: #64748b;
-            margin-bottom: 3px;
-        }
-
-        .bar-bg {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid #cbd5e1;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.4s ease;
-        }
-
-        .fill-coins { background: #eab308; width: 80%; }
-        .fill-level { background: #a855f7; width: 60%; }
-        .fill-mission { background: #0284c7; width: 100%; }
-
-        /* MINI ABA DE ESTATÍSTICAS */
-        .stats-mini-box {
-            background: #e2e8f0;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 11px;
-            display: flex;
-            justify-content: space-between;
-            color: #334155;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-val {
-            font-weight: bold;
-            color: #0284c7;
-            font-size: 13px;
-        }
-
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body>
-
-    <!-- BARRA SUPERIOR FLUTUANTE -->
-    <div id="top-bar" class="top-bar interactive-panel hidden">
-        <button class="hud-btn" onclick="abrirAba('novidades')">Novidades</button>
-        <button class="hud-btn" onclick="abrirAba('apostilas')">Apostilas</button>
-        <button class="hud-btn" onclick="abrirAba('instrutor')">Instrutor</button>
-        <button class="hud-btn" onclick="abrirAba('estatuto')">Estatuto</button>
-        <button id="btn-lock" class="hud-btn lock-status" onclick="alternarBloqueio()">Destravado</button>
-        <button class="hud-btn logout" onclick="logout()">Sair</button>
-    </div>
-
-    <div class="hud-container">
-        <!-- TELA DE LOGIN OVERLAY -->
-        <div id="login-overlay" class="login-overlay interactive-panel">
-            <h3>RPG Polícia - Acesso</h3>
-            <p style="font-size: 12px; color: #64748b;">Autenticação via Missão Habbo</p>
-
-            <div id="login-passo-1">
-                <input type="text" id="usuario-input" placeholder="Seu Nick no Habbo">
-                <label style="font-size: 11px; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
-                    <input type="checkbox" id="manter-conectado"> Manter conectado
-                </label>
-                <button type="button" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px;" onclick="gerarCodigo()">Gerar Código</button>
-            </div>
-
-            <div id="login-passo-2" class="hidden">
-                <p style="font-size: 11px; color: #475569;">Cole o código na sua <b>missão (motto)</b>:</p>
-                <div id="codigo-gerado" class="code-box">RPG-0000</div>
-                <button type="button" class="hud-btn" style="width: 100%; padding: 10px;" onclick="verificarLogin()">Confirmar Missão</button>
-                <button type="button" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;" onclick="voltarPasso1()">Voltar</button>
-            </div>
-
-            <p id="login-msg" style="font-size: 11px; margin-top: 8px; font-weight: bold;"></p>
-        </div>
-
-        <!-- ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) -->
-        <div id="profile-island" class="profile-island interactive-panel hidden">
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <img id="avatar-img" src="" alt="Avatar" style="margin-top: -15px;">
-                </div>
-                <div>
-                    <div id="profile-name" class="profile-name">-JAVA-</div>
-                    <div style="font-size: 10px; color: #0284c7; font-weight: bold;">OFICIAL ATIVO</div>
-                </div>
-            </div>
-
-            <!-- BARRAS DE STATUS -->
-            <div class="status-group">
-                <div class="status-bar-container">
-                    <div class="status-label"><span>Moedas / Salário</span><span>75%</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-coins"></div></div>
-                </div>
-
-                <div class="status-bar-container">
-                    <div class="status-label"><span>Nível XP</span><span>Lvl 6</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-level"></div></div>
-                </div>
-
-                <div class="status-bar-container">
-                    <div class="status-label"><span id="profile-motto">Missão: [P3] Agente</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-mission"></div></div>
-                </div>
-            </div>
-
-            <!-- MINI ABA DE ESTATÍSTICAS -->
-            <div class="stats-mini-box">
-                <div class="stat-item">
-                    <div>ONLINE</div>
-                    <div id="stat-online" class="stat-val">1</div>
-                </div>
-                <div class="stat-item">
-                    <div>CADASTRADOS</div>
-                    <div id="stat-total" class="stat-val">1</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let codigoAleatorio = "";
-        let usuarioDigitado = "";
-        let posicoesTravadas = false;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const sessaoSalva = localStorage.getItem('habbo_session');
-            if (sessaoSalva) {
-                try {
-                    const dados = JSON.parse(sessaoSalva);
-                    carregarHUD(dados);
-                } catch (e) {
-                    localStorage.removeItem('habbo_session');
+        if (missaoAtual.includes(codigoEsperado)) {
+            return res.status(200).json({ 
+                sucesso: true, 
+                mensagem: "Identidade verificada com sucesso!",
+                dadosHabbo: {
+                    nome: dados.name,
+                    avatar: dados.figureString,
+                    missao: dados.motto
                 }
-            }
-            ativarArrastar('profile-island');
-        });
-
-        function gerarCodigo() {
-            const inputEl = document.getElementById('usuario-input');
-            usuarioDigitado = inputEl ? inputEl.value.trim() : "";
-            const msg = document.getElementById('login-msg');
-
-            if (!usuarioDigitado) {
-                msg.style.color = '#dc2626';
-                msg.innerText = "Informe o seu nick!";
-                return;
-            }
-
-            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('codigo-gerado').innerText = codigoAleatorio;
-
-            document.getElementById('login-passo-1').classList.add('hidden');
-            document.getElementById('login-passo-2').classList.remove('hidden');
-            msg.innerText = "";
+            });
+        } else {
+            return res.status(400).json({ 
+                sucesso: false, 
+                erro: `Código não encontrado. Sua missão atual é: "${missaoAtual}"` 
+            });
         }
 
-        function voltarPasso1() {
-            document.getElementById('login-passo-2').classList.add('hidden');
-            document.getElementById('login-passo-1').classList.remove('hidden');
-            document.getElementById('login-msg').innerText = "";
-        }
+    } catch (erro) {
+        console.error("Erro ao consultar a API do Habbo:", erro);
+        res.status(500).json({ erro: "Erro interno ao validar o utilizador." });
+    }
+});
 
-        async function verificarLogin() {
+app.post('/api/habbo-webhook', (req, res) => {
+    console.log("Dados recebidos do Habbo:", req.body);
+    res.status(200).json({ status: "sucesso", mensagem: "Dados processados com sucesso!" });
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});

@@ -10,14 +10,16 @@
             user-select: none;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* FUNDO TOTALMENTE TRANSPARENTE PARA EXTENSÕES E OVERLAYS */
+        html, body {
+            background: transparent !important;
             margin: 0;
             padding: 0;
-            background: #e0f2fe; 
             color: #0f172a;
             overflow: hidden;
             height: 100vh;
+            width: 100vw;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         /* BARRA SUPERIOR FLUTUANTE (CINZA CLARO) */
@@ -33,7 +35,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
             z-index: 1000;
         }
 
@@ -79,6 +81,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            background: transparent !important;
         }
 
         .interactive-panel {
@@ -97,7 +100,7 @@
             padding: 24px;
             width: 320px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             z-index: 2000;
             color: #f8fafc;
         }
@@ -172,7 +175,7 @@
             border: 1px solid #cbd5e1;
             border-radius: 10px;
             padding: 14px;
-            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
             cursor: move;
         }
 
@@ -524,7 +527,6 @@
         };
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Atribuir ouvintes de eventos diretamente
             var btnGerar = document.getElementById('btn-gerar');
             if (btnGerar) btnGerar.addEventListener('click', window.gerarCodigo);
 
@@ -535,19 +537,3 @@
             if (btnVerificar) btnVerificar.addEventListener('click', window.verificarLogin);
 
             var btnVoltar = document.getElementById('btn-voltar');
-            if (btnVoltar) btnVoltar.addEventListener('click', window.voltarPasso1);
-
-            var sessaoSalva = localStorage.getItem('habbo_session');
-            if (sessaoSalva) {
-                try {
-                    var dados = JSON.parse(sessaoSalva);
-                    carregarHUD(dados);
-                } catch (e) {
-                    localStorage.removeItem('habbo_session');
-                }
-            }
-            ativarArrastar('profile-island');
-        });
-    </script>
-</body>
-</html>

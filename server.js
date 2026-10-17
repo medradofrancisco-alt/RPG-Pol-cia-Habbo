@@ -4,20 +4,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// PERMITE QUE O SITE SEJA ABERTO EM EXTENSÕES E JANELAS FLUTUANTES
+// Permite o carregamento em extensões e janelas flutuantes de overlay
 app.use((req, res, next) => {
-    res.setHeader("X-Frame-Options", "ALLOWALL");
     res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     next();
 });
 
-app.use(express.static('public'));
-
-// ... (o restante do código das rotas /api/verificar-habbo continua igual)const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
 app.use(express.static('public'));
 
 // Rota de verificação do Habbo (Login por missão)

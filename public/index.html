@@ -1,84 +1,811 @@
-<!-- MENU PRINCIPAL DO HUD (Fica fixo na tela) -->
-<div id="hud-menu" style="position: fixed; top: 10px; left: 10px; background: #1a1a1a; border: 2px solid #333; padding: 8px; border-radius: 8px; display: flex; gap: 8px; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-    <button onclick="toggleIlha('ilha-punicoes')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">⚖️ Punições</button>
-    <button onclick="toggleIlha('ilha-manuais')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">📖 Manuais</button>
-    <button onclick="toggleIlha('ilha-patrulha')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🛡️ Patrulha</button>
-</div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUD Polícia Habbo - Sistema Tático Modular</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Press Start 2P for Habbo Wired feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-<!-- ILHA 1: PUNIÇÕES -->
-<div id="ilha-punicoes" class="ilha-flutuante" style="display: none; position: absolute; top: 80px; left: 50px; width: 300px; background: #1e1e1e; border: 2px solid #444; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.7); z-index: 10000;">
-    <div class="ilha-header" style="background: #2b2b2b; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; cursor: move; border-bottom: 1px solid #444; color: #fff; font-weight: bold;">
-        <span>⚖️ Tabela de Punições</span>
-        <button onclick="fecharIlha('ilha-punicoes')" style="background: #c0392b; color: #fff; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold;">X</button>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        habbo: {
+                            dark: '#121318',
+                            card: '#1b1d24',
+                            header: '#252833',
+                            accent: '#2b2f3e',
+                            gold: '#e67e22',
+                            blue: '#2980b9',
+                            red: '#c0392b',
+                            green: '#27ae60'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        pixel: ['"Press Start 2P"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos Personalizados Estilo Habbo Wired / Dark Glassmorphism */
+        body {
+            background-color: #0b0c0e;
+            color: #e1e2e6;
+            user-select: none;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(41, 128, 185, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(230, 126, 34, 0.05) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Pixelated Habbo Avatars */
+        .pixelated {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Borda estilo Wired / Retro */
+        .wired-border {
+            border: 2px solid #2d313f;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        /* Ilhas Flutuantes */
+        .ilha-flutuante {
+            position: absolute;
+            z-index: 100;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .ilha-flutuante.edit-mode {
+            border-color: #e67e22 !important;
+            box-shadow: 0 0 15px rgba(230, 126, 34, 0.4) !important;
+        }
+
+        .ilha-header {
+            cursor: move;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121318;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d313f;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e67e22;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased relative">
+
+    <!-- NOTIFICAÇÕES (TOAST SYSTEM) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[10000] flex flex-col gap-2"></div>
+
+    <!-- ========================================== -->
+    <!-- TELA 1: LANDING PAGE / DOWNLOAD PÚBLICO -->
+    <!-- ========================================== -->
+    <div id="screen-landing" class="min-h-screen flex flex-col justify-between p-4 md:p-8 max-w-6xl mx-auto">
+        <!-- Header / Logo -->
+        <header class="flex justify-between items-center py-4 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-habbo-gold rounded-lg flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-pixel text-xs md:text-sm text-habbo-gold tracking-wider">POLÍCIA HABBO HUD</h1>
+                    <p class="text-xs text-gray-400">Sistema Tático de Apoio Operacional</p>
+                </div>
+            </div>
+            <button onclick="switchScreen('screen-login')" class="bg-habbo-header hover:bg-habbo-accent text-white px-4 py-2 rounded-lg text-sm font-semibold border border-gray-700 transition flex items-center gap-2">
+                <i class="fa-solid fa-right-to-bracket text-habbo-gold"></i>
+                <span>Acessar HUD Web</span>
+            </button>
+        </header>
+
+        <!-- Main Hero -->
+        <main class="grid md:grid-cols-2 gap-12 my-auto py-12 items-center">
+            <div class="space-y-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-bolt"></i> Versão Desktop 1.0.0 Pronta
+                </div>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white leading-tight">
+                    Agilidade e Controle Tático <span class="text-habbo-gold">Sobreposto ao Habbo</span>
+                </h2>
+                <p class="text-gray-400 text-base leading-relaxed">
+                    Um aplicativo leve em formato de HUD sobreposto (Always-on-Top). Acesse punições, manuais e status de patrulha sem sair da sala do jogo.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                    <a href="#" id="btn-download-exe" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-amber-500/20 transition flex items-center justify-center gap-3 text-base">
+                        <i class="fa-brands fa-windows text-xl"></i>
+                        <span>Baixar HUD Desktop (.exe)</span>
+                    </a>
+                    <button onclick="switchScreen('screen-login')" class="bg-habbo-card hover:bg-habbo-header text-white font-semibold px-6 py-4 rounded-xl border border-gray-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-globe text-blue-400"></i>
+                        <span>Testar no Navegador</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-4 text-xs text-gray-400">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-green-500"></i>
+                        <span>NÃO requer extensão</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-green-500"></i>
+                        <span>Totalmente modular & Ilhas</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-green-500"></i>
+                        <span>Modo Sobreposição Fixa</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-green-500"></i>
+                        <span>Verificação via API Habbo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="bg-habbo-card p-6 rounded-2xl wired-border relative overflow-hidden group">
+                <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="bg-habbo-dark p-4 rounded-xl border border-gray-800 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                        <div class="flex items-center gap-3">
+                            <img id="landing-avatar" src="https://www.habbo.com.br/habbo-imaging/avatarimage?user=PolicialDemo&action=std&direction=2&head_direction=3&gesture=sml&size=m" alt="Avatar" class="pixelated w-10 h-14 bg-habbo-card rounded-lg border border-gray-700">
+                            <div>
+                                <h3 class="font-bold text-sm text-white">Comandante_Habbo</h3>
+                                <p class="text-xs text-amber-400 font-mono">[PM] Oficial Superior</p>
+                            </div>
+                        </div>
+                        <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded-full font-bold">EM SERVIÇO</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-habbo-card p-2.5 rounded-lg border border-gray-800">
+                            <p class="text-gray-500">Patrulha Atual</p>
+                            <p class="font-semibold text-white">HQ Principal - Salão</p>
+                        </div>
+                        <div class="bg-habbo-card p-2.5 rounded-lg border border-gray-800">
+                            <p class="text-gray-500">Tempo de Turno</p>
+                            <p class="font-semibold text-amber-400 font-mono">01h 24m 10s</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-habbo-accent p-3 rounded-lg text-xs space-y-1">
+                        <p class="text-gray-300 font-semibold"><i class="fa-solid fa-gavel text-amber-400 mr-1"></i> Acesso Rápido a Punições</p>
+                        <p class="text-gray-400 text-[11px]">Consulte Artigos, Advertências e Código Penal em tempo real.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center text-xs text-gray-600 py-4 border-t border-gray-800/60">
+            HUD Polícia Habbo RPG &copy; 2026 - Desenvolvido para uso estratégico tático. Não possui afiliação direta com a Sulake Corporation Oy.
+        </footer>
     </div>
-    <div style="padding: 12px; color: #ddd; font-size: 14px;">
-        <p>• Advertência Verbal</p>
-        <p>• Suspensão de 1 dia</p>
-        <p>• Demissão por justa causa</p>
+
+    <!-- ========================================== -->
+    <!-- TELA 2: LOGIN E VALIDAÇÃO DE PERFIL HABBO -->
+    <!-- ========================================== -->
+    <div id="screen-login" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-habbo-card w-full max-w-md p-6 rounded-2xl wired-border space-y-6 relative">
+            <button onclick="switchScreen('screen-landing')" class="absolute top-4 right-4 text-gray-500 hover:text-white text-sm">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 bg-habbo-gold text-black font-bold text-2xl rounded-xl flex items-center justify-center mx-auto shadow-lg">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white">Autenticação de Policial</h2>
+                <p class="text-xs text-gray-400">Informe seu Nick do Habbo.BR para validar sua patente e missão atual.</p>
+            </div>
+
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-2">Nick no Habbo Hotel</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="input-nick" required placeholder="Ex: Sargento.Silva" class="w-full bg-habbo-dark border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-habbo-gold transition">
+                    </div>
+                </div>
+
+                <!-- Preview de Perfil ao Digitar/Buscar -->
+                <div id="habbo-profile-preview" class="hidden bg-habbo-dark p-4 rounded-xl border border-gray-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <img id="api-avatar" src="" alt="Avatar" class="pixelated w-12 h-16 bg-habbo-card rounded-lg border border-gray-700">
+                        <div class="overflow-hidden">
+                            <h4 id="api-nick" class="font-bold text-sm text-white truncate">--</h4>
+                            <p id="api-motto" class="text-xs text-gray-400 italic truncate">"Carregando missão..."</p>
+                            <span id="api-badge" class="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit-login" class="w-full bg-habbo-gold hover:bg-amber-600 text-black font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield"></i>
+                    <span>Verificar e Entrar no HUD</span>
+                </button>
+            </form>
+
+            <div class="text-center pt-2">
+                <button onclick="demoLogin()" class="text-xs text-amber-400 hover:underline">
+                    Modo Demonstração (Sem validação API)
+                </button>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- ILHA 2: MANUAIS -->
-<div id="ilha-manuais" class="ilha-flutuante" style="display: none; position: absolute; top: 80px; left: 380px; width: 300px; background: #1e1e1e; border: 2px solid #444; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.7); z-index: 10000;">
-    <div class="ilha-header" style="background: #2b2b2b; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; cursor: move; border-bottom: 1px solid #444; color: #fff; font-weight: bold;">
-        <span>📖 Manuais de Acesso Rápido</span>
-        <button onclick="fecharIlha('ilha-manuais')" style="background: #c0392b; color: #fff; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold;">X</button>
+    <!-- ========================================== -->
+    <!-- TELA 3: DASHBOARD EM ILHAS FLUTUANTES      -->
+    <!-- ========================================== -->
+    <div id="screen-dashboard" class="hidden min-h-screen relative overflow-hidden">
+        
+        <!-- BARRA SUPERIOR FLUTUANTE (DOCK DE CONTROLES) -->
+        <div id="hud-dock" class="fixed top-4 left-1/2 -translate-x-1/2 bg-habbo-card/95 backdrop-blur border border-gray-700 px-4 py-2.5 rounded-2xl shadow-2xl z-[9999] flex items-center gap-2 md:gap-3">
+            <div class="flex items-center gap-2 pr-3 border-r border-gray-700">
+                <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="font-pixel text-[10px] text-habbo-gold hidden md:inline">HUD POLÍCIA</span>
+            </div>
+
+            <!-- Botões das Ilhas -->
+            <button onclick="toggleIlha('ilha-perfil')" class="btn-dock bg-habbo-dark hover:bg-habbo-accent text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-gray-700/60 transition">
+                <i class="fa-solid fa-id-card text-amber-400"></i>
+                <span class="hidden sm:inline">Perfil</span>
+            </button>
+
+            <button onclick="toggleIlha('ilha-punicoes')" class="btn-dock bg-habbo-dark hover:bg-habbo-accent text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-gray-700/60 transition">
+                <i class="fa-solid fa-gavel text-red-400"></i>
+                <span class="hidden sm:inline">Punições</span>
+            </button>
+
+            <button onclick="toggleIlha('ilha-manuais')" class="btn-dock bg-habbo-dark hover:bg-habbo-accent text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-gray-700/60 transition">
+                <i class="fa-solid fa-book text-blue-400"></i>
+                <span class="hidden sm:inline">Manuais</span>
+            </button>
+
+            <button onclick="toggleIlha('ilha-patrulha')" class="btn-dock bg-habbo-dark hover:bg-habbo-accent text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-gray-700/60 transition">
+                <i class="fa-solid fa-users text-green-400"></i>
+                <span class="hidden sm:inline">Patrulha</span>
+            </button>
+
+            <div class="h-4 w-px bg-gray-700 mx-1"></div>
+
+            <!-- Trava de Layout -->
+            <button id="btn-toggle-edit" onclick="toggleEditLayout()" title="Editar / Mover Posição das Ilhas" class="bg-habbo-dark hover:bg-amber-500/20 text-gray-300 hover:text-amber-400 p-2 rounded-xl text-xs border border-gray-700 transition">
+                <i class="fa-solid fa-arrows-up-down-left-right"></i>
+            </button>
+
+            <!-- Reset Layout -->
+            <button onclick="resetLayout()" title="Resetar Posição das Ilhas" class="bg-habbo-dark hover:bg-gray-700 text-gray-400 p-2 rounded-xl text-xs border border-gray-700 transition">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+
+            <!-- Sair -->
+            <button onclick="logout()" title="Encerrar Sessão" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-xl text-xs border border-red-500/30 transition">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ILHA 1: PERFIL DO POLICIAL -->
+        <!-- ========================================== -->
+        <div id="ilha-perfil" class="ilha-flutuante w-80 bg-habbo-card rounded-2xl wired-border overflow-hidden shadow-2xl" style="top: 90px; left: 30px;">
+            <div class="ilha-header bg-habbo-header p-3 flex justify-between items-center border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-amber-400 text-xs"></i>
+                    <span class="font-bold text-xs text-white uppercase tracking-wider">Perfil Policial</span>
+                </div>
+                <button onclick="toggleIlha('ilha-perfil')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-0.5">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <div class="flex items-center gap-4 bg-habbo-dark p-3 rounded-xl border border-gray-800">
+                    <img id="dash-avatar" src="" alt="Avatar" class="pixelated w-14 h-20 bg-habbo-card rounded-lg border border-gray-700">
+                    <div class="overflow-hidden">
+                        <h3 id="dash-nick" class="font-bold text-base text-white truncate">Policial</h3>
+                        <p id="dash-patente" class="text-xs text-amber-400 font-semibold truncate">[PM] Agente</p>
+                        <p id="dash-missao" class="text-[11px] text-gray-400 italic mt-1 truncate">"Missão Habbo..."</p>
+                    </div>
+                </div>
+
+                <!-- Estatísticas de Turno -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-habbo-dark p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-500 block text-[10px]">Tempo em Serviço</span>
+                        <span id="shift-timer" class="font-mono text-amber-400 font-bold text-sm">00:00:00</span>
+                    </div>
+                    <div class="bg-habbo-dark p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-500 block text-[10px]">Status Operacional</span>
+                        <span class="text-green-400 font-bold text-xs flex items-center gap-1 mt-0.5">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Ativo
+                        </span>
+                    </div>
+                </div>
+
+                <div class="pt-1">
+                    <button onclick="toggleShift()" id="btn-shift" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Iniciar Turno de Patrulha</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ILHA 2: CÓDIGO PENAL / PUNIÇÕES -->
+        <!-- ========================================== -->
+        <div id="ilha-punicoes" class="ilha-flutuante w-96 bg-habbo-card rounded-2xl wired-border overflow-hidden shadow-2xl" style="top: 90px; left: 370px;">
+            <div class="ilha-header bg-habbo-header p-3 flex justify-between items-center border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gavel text-red-400 text-xs"></i>
+                    <span class="font-bold text-xs text-white uppercase tracking-wider">Tabela de Punições</span>
+                </div>
+                <button onclick="toggleIlha('ilha-punicoes')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-0.5">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <!-- Pesquisa -->
+                <div class="relative">
+                    <input type="text" id="search-punicao" onkeyup="filterPunicoes()" placeholder="Buscar infração ou artigo..." class="w-full bg-habbo-dark border border-gray-700 rounded-xl py-2 pl-8 pr-3 text-xs text-white focus:outline-none focus:border-amber-400">
+                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-gray-500 text-xs"></i>
+                </div>
+
+                <!-- Lista de Punições -->
+                <div id="lista-punicoes" class="max-h-64 overflow-y-auto space-y-2 pr-1 text-xs">
+                    <div class="punicao-card bg-habbo-dark p-3 rounded-xl border border-gray-800 hover:border-gray-700 transition space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-amber-400">Artigo 01 - Desrespeito</span>
+                            <span class="bg-yellow-500/20 text-yellow-400 text-[10px] px-2 py-0.5 rounded font-bold">Advertência Verbal</span>
+                        </div>
+                        <p class="text-gray-400 text-[11px]">Faltar com respeito a superiores ou colegas de corporação durante o turno.</p>
+                    </div>
+
+                    <div class="punicao-card bg-habbo-dark p-3 rounded-xl border border-gray-800 hover:border-gray-700 transition space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-amber-400">Artigo 02 - Ausência sem Aviso</span>
+                            <span class="bg-orange-500/20 text-orange-400 text-[10px] px-2 py-0.5 rounded font-bold">Suspensão 24h</span>
+                        </div>
+                        <p class="text-gray-400 text-[11px]">Ausentar-se do posto de guarda (AFK) por mais de 5 minutos sem autorização.</p>
+                    </div>
+
+                    <div class="punicao-card bg-habbo-dark p-3 rounded-xl border border-gray-800 hover:border-gray-700 transition space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-amber-400">Artigo 03 - Insubordinação Grave</span>
+                            <span class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded font-bold">Demissão / Rebaixamento</span>
+                        </div>
+                        <p class="text-gray-400 text-[11px]">Recusar ordens diretas de Oficiais Superiores durante operações no HQ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ILHA 3: MANUAIS E PROTOCOLOS -->
+        <!-- ========================================== -->
+        <div id="ilha-manuais" class="ilha-flutuante w-96 bg-habbo-card rounded-2xl wired-border overflow-hidden shadow-2xl" style="top: 90px; left: 780px;">
+            <div class="ilha-header bg-habbo-header p-3 flex justify-between items-center border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-book text-blue-400 text-xs"></i>
+                    <span class="font-bold text-xs text-white uppercase tracking-wider">Manuais & Protocolos</span>
+                </div>
+                <button onclick="toggleIlha('ilha-manuais')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-0.5">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <div class="flex border-b border-gray-800 text-xs">
+                    <button onclick="switchTabManual('tab-abordagem')" class="tab-manual-btn text-amber-400 border-b-2 border-amber-400 pb-2 px-3 font-semibold">Abordagem</button>
+                    <button onclick="switchTabManual('tab-comandos')" class="tab-manual-btn text-gray-400 hover:text-white pb-2 px-3 font-semibold">Comandos</button>
+                    <button onclick="switchTabManual('tab-codigo-radio')" class="tab-manual-btn text-gray-400 hover:text-white pb-2 px-3 font-semibold">Códigos Q</button>
+                </div>
+
+                <div id="tab-abordagem" class="tab-manual-content max-h-56 overflow-y-auto text-xs text-gray-300 space-y-2 pr-1">
+                    <p class="font-bold text-white">Protocolo de Abordagem ao Recruta:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-gray-400 text-[11px]">
+                        <li>Cumprimente o recruta no portão com a saudação oficial.</li>
+                        <li>Verifique se a missão está no formato correto exigido pela corporação.</li>
+                        <li>Confira se o visual segue o padrão do uniforme da patente.</li>
+                        <li>Assuma o controle dos Wireds de acesso e libere a passagem.</li>
+                    </ol>
+                </div>
+
+                <div id="tab-comandos" class="tab-manual-content hidden max-h-56 overflow-y-auto text-xs text-gray-300 space-y-2 pr-1">
+                    <p class="font-bold text-white">Comandos Principais de Sentinela:</p>
+                    <ul class="list-disc list-inside space-y-1 text-gray-400 text-[11px]">
+                        <li><strong class="text-amber-400">:sentido</strong> - Todos os oficiais assumem postura de respeito.</li>
+                        <li><strong class="text-amber-400">:continencia</strong> - Executa o aceno oficial.</li>
+                        <li><strong class="text-amber-400">:apresentar</strong> - Apresenta-se ao oficial superior.</li>
+                    </ul>
+                </div>
+
+                <div id="tab-codigo-radio" class="tab-manual-content hidden max-h-56 overflow-y-auto text-xs text-gray-300 space-y-2 pr-1">
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="bg-habbo-dark p-2 rounded-lg border border-gray-800"><strong class="text-amber-400">QAP:</strong> Na escuta</div>
+                        <div class="bg-habbo-dark p-2 rounded-lg border border-gray-800"><strong class="text-amber-400">QSL:</strong> Entendido</div>
+                        <div class="bg-habbo-dark p-2 rounded-lg border border-gray-800"><strong class="text-amber-400">QTH:</strong> Localização</div>
+                        <div class="bg-habbo-dark p-2 rounded-lg border border-gray-800"><strong class="text-amber-400">TKS:</strong> Obrigado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ILHA 4: STATUS DE PATRULHA / QG -->
+        <!-- ========================================== -->
+        <div id="ilha-patrulha" class="ilha-flutuante w-80 bg-habbo-card rounded-2xl wired-border overflow-hidden shadow-2xl" style="top: 400px; left: 30px;">
+            <div class="ilha-header bg-habbo-header p-3 flex justify-between items-center border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-users text-green-400 text-xs"></i>
+                    <span class="font-bold text-xs text-white uppercase tracking-wider">Patrulheiros On-line</span>
+                </div>
+                <button onclick="toggleIlha('ilha-patrulha')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-0.5">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <div class="flex justify-between items-center bg-habbo-dark p-2.5 rounded-xl border border-gray-800 text-xs">
+                    <span class="text-gray-400">Estado do HQ:</span>
+                    <span class="font-bold text-green-400 bg-green-500/10 px-2 py-0.5 rounded">OPERACIONAL</span>
+                </div>
+
+                <div class="space-y-2 max-h-48 overflow-y-auto text-xs">
+                    <div class="flex items-center justify-between bg-habbo-dark p-2 rounded-xl border border-gray-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span class="font-semibold text-white">Sargento.Rios</span>
+                        </div>
+                        <span class="text-[10px] text-gray-500">Portão 1</span>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-habbo-dark p-2 rounded-xl border border-gray-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span class="font-semibold text-white">Tenente_Vargas</span>
+                        </div>
+                        <span class="text-[10px] text-gray-500">Supervisão</span>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-habbo-dark p-2 rounded-xl border border-gray-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            <span class="font-semibold text-white">Capitão_Lopes</span>
+                        </div>
+                        <span class="text-[10px] text-gray-500">Ausente (5m)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <div style="padding: 12px; color: #ddd; font-size: 14px;">
-        <p>• Protocolo de Abordagem</p>
-        <p>• Regras de Patrulhamento</p>
-        <p>• Uso de Armamento</p>
-    </div>
-</div>
 
-<!-- ILHA 3: PATRULHA -->
-<div id="ilha-patrulha" class="ilha-flutuante" style="display: none; position: absolute; top: 80px; left: 710px; width: 300px; background: #1e1e1e; border: 2px solid #444; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.7); z-index: 10000;">
-    <div class="ilha-header" style="background: #2b2b2b; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; cursor: move; border-bottom: 1px solid #444; color: #fff; font-weight: bold;">
-        <span>🛡️ Status de Patrulha</span>
-        <button onclick="fecharIlha('ilha-patrulha')" style="background: #c0392b; color: #fff; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold;">X</button>
-    </div>
-    <div style="padding: 12px; color: #ddd; font-size: 14px;">
-        <p>Membros em serviço: <b>12</b></p>
-        <p>Estado do QG: <span style="color: #2ecc71;">OPERACIONAL</span></p>
-    </div>
-</div>
+    <!-- ========================================== -->
+    <!-- LOGICA JAVASCRIPT NATIVA -->
+    <!-- ========================================== -->
+    <script>
+        // ESTADO GLOBAL DA APLICAÇÃO
+        let currentUser = null;
+        let isEditMode = false;
+        let isShiftActive = false;
+        let shiftInterval = null;
+        let shiftSeconds = 0;
 
-<!-- SCRIPT DE CONTROLE (Abrir, Fechar e Arrastar) -->
-<script>
-function toggleIlha(id) {
-    const el = document.getElementById(id);
-    if (el.style.display === 'none') {
-        el.style.display = 'block';
-    } else {
-        el.style.display = 'none';
-    }
-}
+        // TROCA DE TELAS
+        function switchScreen(screenId) {
+            document.getElementById('screen-landing').classList.add('hidden');
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-dashboard').classList.add('hidden');
 
-function fecharIlha(id) {
-    document.getElementById(id).style.display = 'none';
-}
+            document.getElementById(screenId).classList.remove('hidden');
+        }
 
-// Permitir arrastar as ilhas pela barra superior
-document.querySelectorAll('.ilha-flutuante').forEach(ilha => {
-    const header = ilha.querySelector('.ilha-header');
-    let isDragging = false;
-    let startX, startY;
+        // MOSTRAR MENSAGENS TOAST
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-habbo-header';
+            
+            toast.className = `${bgClass} text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 border border-white/10 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
-    header.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX - ilha.offsetLeft;
-        startY = e.clientY - ilha.offsetTop;
-        e.preventDefault();
-    });
+        // HANDLER DE LOGIN COM CONSULTA A API DO HABBO.BR
+        async function handleLogin(event) {
+            event.preventDefault();
+            const nick = document.getElementById('input-nick').value.trim();
+            const btn = document.getElementById('btn-submit-login');
+            
+            if (!nick) return;
 
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        ilha.style.left = (e.clientX - startX) + 'px';
-        ilha.style.top = (e.clientY - startY) + 'px';
-    });
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Validando na API Habbo...</span>`;
 
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-});
-</script>
+            try {
+                // Requisição para a API oficial do Habbo Hotel Brasil
+                const response = await fetch(`https://www.habbo.com.br/api/public/users?name=${encodeURIComponent(nick)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Usuário não encontrado no Habbo.BR');
+                }
+
+                const data = await response.json();
+                
+                // Processar Dados do Usuario
+                currentUser = {
+                    nick: data.name,
+                    motto: data.motto || 'Sem missão definida',
+                    figure: data.figureString,
+                    avatarUrl: `https://www.habbo.com.br/habbo-imaging/avatarimage?user=${data.name}&action=std&direction=2&head_direction=3&gesture=sml&size=l`
+                };
+
+                // Exibir Preview do Perfil
+                document.getElementById('api-avatar').src = currentUser.avatarUrl;
+                document.getElementById('api-nick').innerText = currentUser.nick;
+                document.getElementById('api-motto').innerText = `"${currentUser.motto}"`;
+                
+                const badgeEl = document.getElementById('api-badge');
+                if (currentUser.motto.toUpperCase().includes('[PM]') || currentUser.motto.toUpperCase().includes('[POLICIA]') || currentUser.motto.toUpperCase().includes('[POL]')) {
+                    badgeEl.className = 'inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400';
+                    badgeEl.innerText = 'PATENTE POLICIAL DETECTADA';
+                } else {
+                    badgeEl.className = 'inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400';
+                    badgeEl.innerText = 'MISSÃO A REVISAR';
+                }
+                
+                document.getElementById('habbo-profile-preview').classList.remove('hidden');
+
+                showToast(`Policial ${currentUser.nick} autenticado com sucesso!`, 'success');
+
+                setTimeout(() => {
+                    initDashboard();
+                }, 1200);
+
+            } catch (error) {
+                showToast(error.message || 'Erro ao conectar à API do Habbo.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-shield"></i> <span>Verificar e Entrar no HUD</span>`;
+            }
+        }
+
+        // MODO DEMONSTRAÇÃO
+        function demoLogin() {
+            currentUser = {
+                nick: 'Oficial_Demonstracao',
+                motto: '[PM] Capitão - Instrutor Chefe',
+                avatarUrl: 'https://www.habbo.com.br/habbo-imaging/avatarimage?user=PolicialDemo&action=std&direction=2&head_direction=3&gesture=sml&size=l'
+            };
+            showToast('Sessão de demonstração iniciada.', 'info');
+            initDashboard();
+        }
+
+        // INICIALIZAÇÃO DO DASHBOARD PÓS-LOGIN
+        function initDashboard() {
+            document.getElementById('dash-nick').innerText = currentUser.nick;
+            document.getElementById('dash-missao').innerText = `"${currentUser.motto}"`;
+            document.getElementById('dash-avatar').src = currentUser.avatarUrl;
+
+            switchScreen('screen-dashboard');
+            loadLayoutPositions();
+        }
+
+        // SAIR DA SESSÃO
+        function logout() {
+            currentUser = null;
+            if (isShiftActive) toggleShift();
+            switchScreen('screen-login');
+            showToast('Sessão encerrada com segurança.');
+        }
+
+        // EXIBIR / OCULTAR ILHAS FLUTUANTES
+        function toggleIlha(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none' || el.classList.contains('hidden')) {
+                el.style.display = 'block';
+                el.classList.remove('hidden');
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        // CONTROLAR TURNO DE PATRULHA
+        function toggleShift() {
+            const btn = document.getElementById('btn-shift');
+            const timerEl = document.getElementById('shift-timer');
+
+            if (!isShiftActive) {
+                isShiftActive = true;
+                btn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition flex items-center justify-center gap-2';
+                btn.innerHTML = `<i class="fa-solid fa-stop"></i> <span>Finalizar Turno de Patrulha</span>`;
+                
+                showToast('Turno de patrulha iniciado!', 'success');
+
+                shiftInterval = setInterval(() => {
+                    shiftSeconds++;
+                    const hrs = String(Math.floor(shiftSeconds / 3600)).padStart(2, '0');
+                    const mins = String(Math.floor((shiftSeconds % 3600) / 60)).padStart(2, '0');
+                    const secs = String(shiftSeconds % 60).padStart(2, '0');
+                    timerEl.innerText = `${hrs}:${mins}:${secs}`;
+                }, 1000);
+
+            } else {
+                isShiftActive = false;
+                clearInterval(shiftInterval);
+                btn.className = 'w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition flex items-center justify-center gap-2';
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Iniciar Turno de Patrulha</span>`;
+                showToast(`Turno encerrado. Duração: ${timerEl.innerText}`);
+            }
+        }
+
+        // ABAS DOS MANUAIS
+        function switchTabManual(tabId) {
+            document.querySelectorAll('.tab-manual-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-manual-btn').forEach(el => {
+                el.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400');
+                el.classList.add('text-gray-400');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            event.target.classList.add('text-amber-400', 'border-b-2', 'border-amber-400');
+        }
+
+        // FILTRO DA TABELA DE PUNIÇÕES
+        function filterPunicoes() {
+            const query = document.getElementById('search-punicao').value.toLowerCase();
+            const cards = document.querySelectorAll('.punicao-card');
+
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // ==========================================
+        // SISTEMA DE ARRASTAR (DRAG & DROP) DAS ILHAS
+        // ==========================================
+        function toggleEditLayout() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('btn-toggle-edit');
+            const ilhas = document.querySelectorAll('.ilha-flutuante');
+
+            if (isEditMode) {
+                btn.classList.add('bg-amber-500/20', 'text-amber-400', 'border-amber-500');
+                showToast('Modo de Edição ATIVADO. Arraste as ilhas para reposicionar.');
+                ilhas.forEach(ilha => ilha.classList.add('edit-mode'));
+            } else {
+                btn.classList.remove('bg-amber-500/20', 'text-amber-400', 'border-amber-500');
+                showToast('Layout das ilhas salvo com sucesso!', 'success');
+                ilhas.forEach(ilha => ilha.classList.remove('edit-mode'));
+                saveLayoutPositions();
+            }
+        }
+
+        // Inicializar listeners de arraste do mouse
+        document.querySelectorAll('.ilha-flutuante').forEach(ilha => {
+            const header = ilha.querySelector('.ilha-header');
+            let isDragging = false;
+            let startX, startY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - ilha.offsetLeft;
+                startY = e.clientY - ilha.offsetTop;
+                ilha.style.zIndex = '1000'; // Trazer para a frente ao clicar
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                let newX = e.clientX - startX;
+                let newY = e.clientY - startY;
+
+                // Limites da tela
+                newX = Math.max(10, Math.min(newX, window.innerWidth - ilha.offsetWidth - 10));
+                newY = Math.max(10, Math.min(newY, window.innerHeight - ilha.offsetHeight - 10));
+
+                ilha.style.left = newX + 'px';
+                ilha.style.top = newY + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    saveLayoutPositions();
+                }
+            });
+        });
+
+        // SALVAR POSIÇÕES DAS ILHAS NO LOCALSTORAGE
+        function saveLayoutPositions() {
+            const positions = {};
+            document.querySelectorAll('.ilha-flutuante').forEach(ilha => {
+                positions[ilha.id] = {
+                    left: ilha.style.left,
+                    top: ilha.style.top,
+                    display: ilha.style.display
+                };
+            });
+            localStorage.setItem('habbo_hud_layout', JSON.stringify(positions));
+        }
+
+        // CARREGAR POSIÇÕES DAS ILHAS
+        function loadLayoutPositions() {
+            const saved = localStorage.getItem('habbo_hud_layout');
+            if (!saved) return;
+
+            try {
+                const positions = JSON.parse(saved);
+                Object.keys(positions).forEach(id => {
+                    const ilha = document.getElementById(id);
+                    if (ilha && positions[id]) {
+                        if (positions[id].left) ilha.style.left = positions[id].left;
+                        if (positions[id].top) ilha.style.top = positions[id].top;
+                    }
+                });
+            } catch (e) {
+                console.error("Erro ao carregar posições salvas", e);
+            }
+        }
+
+        // RESETAR LAYOUT DAS ILHAS
+        function resetLayout() {
+            localStorage.removeItem('habbo_hud_layout');
+            document.getElementById('ilha-perfil').style.top = '90px';
+            document.getElementById('ilha-perfil').style.left = '30px';
+
+            document.getElementById('ilha-punicoes').style.top = '90px';
+            document.getElementById('ilha-punicoes').style.left = '370px';
+
+            document.getElementById('ilha-manuais').style.top = '90px';
+            document.getElementById('ilha-manuais').style.left = '780px';
+
+            document.getElementById('ilha-patrulha').style.top = '400px';
+            document.getElementById('ilha-patrulha').style.left = '30px';
+
+            showToast('Posições padrão restauradas!');
+        }
+    </script>
+</body>
+</html>

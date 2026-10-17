@@ -10,10 +10,13 @@
             user-select: none;
         }
 
-        /* FUNDO DE WIRED PERSONALIZADO */
+        /* FUNDO ESCURO WIRED DE SEGURANÇA + IMAGEM */
         html, body {
-            background: #0f172a url('background.jpg') no-repeat center center fixed !important;
-            background-size: cover !important;
+            background-color: #0f172a !important;
+            background-image: url('background.jpg');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
             margin: 0;
             padding: 0;
             color: #f8fafc;
@@ -95,7 +98,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.92);
+            background: rgba(15, 23, 42, 0.95);
             border: 2px solid #0284c7;
             border-radius: 12px;
             padding: 24px;
@@ -197,4 +200,399 @@
         }
 
         .frank-img {
-            margin-top: -
+            margin-top: -12px;
+        }
+
+        .frank-bubble {
+            font-size: 11px;
+            line-height: 1.3;
+            color: #38bdf8;
+            font-weight: 500;
+        }
+
+        /* ILHA DO PERFIL (CINZA CLARO) */
+        .profile-island {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 260px;
+            background: rgba(241, 245, 249, 0.95);
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 14px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            cursor: move;
+            backdrop-filter: blur(4px);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-avatar {
+            width: 54px;
+            height: 54px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .profile-name {
+            font-weight: bold;
+            font-size: 15px;
+            color: #0f172a;
+        }
+
+        /* BARRAS DE STATUS */
+        .status-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-bar-container {
+            font-size: 11px;
+        }
+
+        .status-label {
+            display: flex;
+            justify-content: space-between;
+            color: #475569;
+            margin-bottom: 3px;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .fill-coins { background: #eab308; width: 80%; }
+        .fill-level { background: #a855f7; width: 60%; }
+        .fill-mission { background: #0284c7; width: 100%; }
+
+        /* MINI ABA DE ESTATÍSTICAS */
+        .stats-mini-box {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            color: #334155;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-val {
+            font-weight: bold;
+            color: #0284c7;
+            font-size: 13px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA SUPERIOR FLUTUANTE -->
+    <div id="top-bar" class="top-bar interactive-panel hidden">
+        <button class="hud-btn" type="button" onclick="abrirAba('novidades')">Novidades</button>
+        <button class="hud-btn" type="button" onclick="abrirAba('apostilas')">Apostilas</button>
+        <button class="hud-btn" type="button" onclick="abrirAba('instrutor')">Instrutor</button>
+        <button class="hud-btn" type="button" onclick="abrirAba('estatuto')">Estatuto</button>
+        <button id="btn-lock" class="hud-btn lock-status" type="button" onclick="alternarBloqueio()">Destravado</button>
+        <button class="hud-btn logout" type="button" onclick="logout()">Sair</button>
+    </div>
+
+    <div class="hud-container">
+        <!-- TELA DE LOGIN OVERLAY -->
+        <div id="login-overlay" class="login-overlay interactive-panel">
+            <h3>RPG Polícia - Acesso</h3>
+            <p style="font-size: 12px; color: #94a3b8;">Autenticação via Missão Habbo</p>
+
+            <form id="form-login" onsubmit="event.preventDefault(); executarGerarCodigo();">
+                <div id="login-passo-1">
+                    <input type="text" id="usuario-input" placeholder="Seu Nick no Habbo" autocomplete="off">
+                    <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
+                        <input type="checkbox" id="manter-conectado"> Manter conectado
+                    </label>
+                    <button type="submit" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;">Gerar Código</button>
+                    
+                    <!-- BOTÃO DE DOWNLOAD DA EXTENSÃO -->
+                    <a href="/download-extensao" target="_blank" style="display: block; margin-top: 12px; font-size: 11px; color: #38bdf8; text-decoration: underline; font-weight: bold;">🧩 Baixar Extensão do HUD para Chrome</a>
+                </div>
+            </form>
+
+            <div id="login-passo-2" class="hidden">
+                <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 4px;">Cole o código na sua <b>missão (motto)</b>:</p>
+                
+                <div class="code-container">
+                    <span id="codigo-gerado" class="code-box">RPG-0000</span>
+                    <button type="button" id="btn-copiar" class="copy-btn" onclick="executarCopiarCodigo()">Copiar</button>
+                </div>
+
+                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;" onclick="executarVerificarLogin()">Confirmar Missão</button>
+                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;" onclick="executarVoltarPasso1()">Voltar</button>
+            </div>
+
+            <!-- QUADRO DO FRANK HABBO -->
+            <div id="frank-box" class="frank-container">
+                <div class="frank-avatar-wrap">
+                    <img src="https://www.habbo.com.br/habbo-imaging/avatarimage?user=Frank&direction=2&head_direction=2&action=std&size=m" alt="Frank Habbo" class="frank-img" onerror="this.parentElement.style.display='none';">
+                </div>
+                <div id="frank-msg" class="frank-bubble">Seja bem-vindo, oficial! Digite seu nick do Habbo acima para começar.</div>
+            </div>
+        </div>
+
+        <!-- ILHA DO PERFIL -->
+        <div id="profile-island" class="profile-island interactive-panel hidden">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <img id="avatar-img" src="" alt="Avatar" style="margin-top: -15px;">
+                </div>
+                <div>
+                    <div id="profile-name" class="profile-name">-JAVA-</div>
+                    <div style="font-size: 10px; color: #0284c7; font-weight: bold;">OFICIAL ATIVO</div>
+                </div>
+            </div>
+
+            <!-- BARRAS DE STATUS -->
+            <div class="status-group">
+                <div class="status-bar-container">
+                    <div class="status-label"><span>Moedas / Salário</span><span>75%</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-coins"></div></div>
+                </div>
+
+                <div class="status-bar-container">
+                    <div class="status-label"><span>Nível XP</span><span>Lvl 6</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-level"></div></div>
+                </div>
+
+                <div class="status-bar-container">
+                    <div class="status-label"><span id="profile-motto">Missão: [P3] Agente</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-mission"></div></div>
+                </div>
+            </div>
+
+            <!-- MINI ABA DE ESTATÍSTICAS -->
+            <div class="stats-mini-box">
+                <div class="stat-item">
+                    <div>ONLINE</div>
+                    <div id="stat-online" class="stat-val">1</div>
+                </div>
+                <div class="stat-item">
+                    <div>CADASTRADOS</div>
+                    <div id="stat-total" class="stat-val">1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var codigoAleatorio = "";
+        var usuarioDigitado = "";
+        var posicoesTravadas = false;
+
+        function falarFrank(texto, eErro) {
+            var frankMsg = document.getElementById('frank-msg');
+            if (frankMsg) {
+                frankMsg.innerText = texto;
+                frankMsg.style.color = eErro ? '#f87171' : '#38bdf8';
+            }
+        }
+
+        function executarGerarCodigo() {
+            var inputEl = document.getElementById('usuario-input');
+            usuarioDigitado = inputEl ? inputEl.value.trim() : "";
+
+            if (!usuarioDigitado) {
+                falarFrank("Oops! Digite o seu nick do Habbo no campo acima para continuar.", true);
+                return;
+            }
+
+            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
+            var codBox = document.getElementById('codigo-gerado');
+            if (codBox) codBox.innerText = codigoAleatorio;
+
+            var p1 = document.getElementById('login-passo-1');
+            var p2 = document.getElementById('login-passo-2');
+            if (p1) p1.classList.add('hidden');
+            if (p2) p2.classList.remove('hidden');
+
+            falarFrank("Ótimo! Copie o código acima e cole na missão do seu perfil no Habbo.", false);
+        }
+
+        function executarCopiarCodigo() {
+            var btnCopiar = document.getElementById('btn-copiar');
+            if (!codigoAleatorio) return;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codigoAleatorio).then(function() {
+                    if (btnCopiar) {
+                        btnCopiar.innerText = "Copiado!";
+                        btnCopiar.style.background = "#16a34a";
+                        setTimeout(function() {
+                            btnCopiar.innerText = "Copiar";
+                            btnCopiar.style.background = "#0284c7";
+                        }, 2000);
+                    }
+                });
+            } else {
+                var tempInput = document.createElement("input");
+                tempInput.value = codigoAleatorio;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                if (btnCopiar) {
+                    btnCopiar.innerText = "Copiado!";
+                    btnCopiar.style.background = "#16a34a";
+                    setTimeout(function() {
+                        btnCopiar.innerText = "Copiar";
+                        btnCopiar.style.background = "#0284c7";
+                    }, 2000);
+                }
+            }
+        }
+
+        function executarVoltarPasso1() {
+            var p1 = document.getElementById('login-passo-1');
+            var p2 = document.getElementById('login-passo-2');
+            if (p2) p2.classList.add('hidden');
+            if (p1) p1.classList.remove('hidden');
+            falarFrank("Digite seu nick do Habbo para iniciar o acesso.", false);
+        }
+
+        async function executarVerificarLogin() {
+            falarFrank("Aguarde... Estou consultando os registros do Habbo!", false);
+
+            try {
+                var res = await fetch('/api/verificar-habbo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAleatorio })
+                });
+
+                var data = await res.json();
+
+                if (res.ok && data.sucesso) {
+                    var chk = document.getElementById('manter-conectado');
+                    if (chk && chk.checked) {
+                        localStorage.setItem('habbo_session', JSON.stringify(data.dadosHabbo));
+                    }
+                    carregarHUD(data.dadosHabbo);
+                } else {
+                    falarFrank(data.erro || "Não encontrei o código na sua missão do Habbo! Verifique se salvou e tente novamente.", true);
+                }
+            } catch (err) {
+                falarFrank("Erro ao conectar com o servidor. Verifique a conexão.", true);
+            }
+        }
+
+        function carregarHUD(dados) {
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('top-bar').classList.remove('hidden');
+            document.getElementById('profile-island').classList.remove('hidden');
+
+            document.getElementById('profile-name').innerText = dados.nome;
+            document.getElementById('profile-motto').innerText = `Missão: ${dados.missao}`;
+            document.getElementById('avatar-img').src = `https://www.habbo.com.br/habbo-imaging/avatarimage?figure=${dados.avatar}&direction=2&head_direction=2&action=std&size=m`;
+        }
+
+        function logout() {
+            localStorage.removeItem('habbo_session');
+            document.getElementById('top-bar').classList.add('hidden');
+            document.getElementById('profile-island').classList.add('hidden');
+            document.getElementById('login-overlay').classList.remove('hidden');
+            executarVoltarPasso1();
+        }
+
+        function alternarBloqueio() {
+            posicoesTravadas = !posicoesTravadas;
+            var btn = document.getElementById('btn-lock');
+            if (posicoesTravadas) {
+                btn.innerText = "Travado";
+                btn.style.background = "#dcfce7";
+                btn.style.color = "#15803d";
+                btn.style.borderColor = "#bbf7d0";
+            } else {
+                btn.innerText = "Destravado";
+                btn.style.background = "#fef08a";
+                btn.style.color = "#854d0e";
+                btn.style.borderColor = "#fde047";
+            }
+        }
+
+        function ativarArrastar(idElemento) {
+            var elmnt = document.getElementById(idElemento);
+            if (!elmnt) return;
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            elmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                if (posicoesTravadas) return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                if (posicoesTravadas) return;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        function abrirAba(nome) {
+            alert("Aba " + nome.toUpperCase() + " em desenvolvimento!");
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var sessaoSalva = localStorage.getItem('habbo_session');
+            if (sessaoSalva) {
+                try {
+                    var dados = JSON.parse(sessaoSalva);
+                    carregarHUD(dados);
+                } catch (e) {
+                    localStorage.removeItem('habbo_session');
+                }
+            }
+            ativarArrastar('profile-island');
+        });
+    </script>
+</body>
+</html>

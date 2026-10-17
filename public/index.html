@@ -14,7 +14,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            /* Fundo Azul Bebê suave para o overlay */
             background: #e0f2fe; 
             color: #0f172a;
             overflow: hidden;
@@ -86,25 +85,26 @@
             pointer-events: auto;
         }
 
-        /* CARD DE LOGIN (CINZA CLARO) */
+        /* CARD DE LOGIN (CINZA ESCURO / SLATE) */
         .login-overlay {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
+            background: #1e293b; /* Cinza Escuro */
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 24px;
             width: 320px;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             z-index: 2000;
+            color: #f8fafc;
         }
 
         .login-overlay h3 {
             margin-top: 0;
-            color: #0284c7;
+            color: #38bdf8; /* Azul Claro / Ciano */
             font-size: 18px;
             letter-spacing: 0.5px;
         }
@@ -113,12 +113,16 @@
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #0f172a;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #f8fafc;
             border-radius: 6px;
             text-align: center;
             font-weight: 500;
+        }
+
+        input[type="text"]::placeholder {
+            color: #94a3b8;
         }
 
         /* CAIXA DE CÓDIGO (TEXTO COPIÁVEL + BOTÃO) */
@@ -126,19 +130,19 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #e2e8f0;
-            border: 1px dashed #0284c7;
+            background: #0f172a;
+            border: 1px dashed #38bdf8;
             border-radius: 6px;
             padding: 6px 10px;
             margin: 10px 0;
         }
 
         .code-box {
-            color: #0369a1;
+            color: #38bdf8;
             font-weight: bold;
             font-size: 15px;
             letter-spacing: 1.5px;
-            user-select: text !important; /* Permite selecionar o texto */
+            user-select: text !important;
             cursor: text;
         }
 
@@ -273,30 +277,29 @@
     </div>
 
     <div class="hud-container">
-        <!-- TELA DE LOGIN OVERLAY -->
+        <!-- TELA DE LOGIN OVERLAY (CINZA ESCURO) -->
         <div id="login-overlay" class="login-overlay interactive-panel">
             <h3>RPG Polícia - Acesso</h3>
-            <p style="font-size: 12px; color: #64748b;">Autenticação via Missão Habbo</p>
+            <p style="font-size: 12px; color: #94a3b8;">Autenticação via Missão Habbo</p>
 
             <div id="login-passo-1">
                 <input type="text" id="usuario-input" placeholder="Seu Nick no Habbo">
-                <label style="font-size: 11px; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
+                <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
                     <input type="checkbox" id="manter-conectado"> Manter conectado
                 </label>
-                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px;">Gerar Código</button>
+                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;" onclick="gerarCodigo()">Gerar Código</button>
             </div>
 
             <div id="login-passo-2" class="hidden">
-                <p style="font-size: 11px; color: #475569; margin-bottom: 4px;">Cole o código na sua <b>missão (motto)</b>:</p>
+                <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 4px;">Cole o código na sua <b>missão (motto)</b>:</p>
                 
-                <!-- CAIXA COM BOTÃO DE COPIAR E TEXTO SELECIONÁVEL -->
                 <div class="code-container">
                     <span id="codigo-gerado" class="code-box">RPG-0000</span>
-                    <button type="button" id="btn-copiar" class="copy-btn">Copiar</button>
+                    <button type="button" id="btn-copiar" class="copy-btn" onclick="copiarCodigo()">Copiar</button>
                 </div>
 
-                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px;">Confirmar Missão</button>
-                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;">Voltar</button>
+                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;" onclick="verificarLogin()">Confirmar Missão</button>
+                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;" onclick="voltarPasso1()">Voltar</button>
             </div>
 
             <p id="login-msg" style="font-size: 11px; margin-top: 8px; font-weight: bold;"></p>
@@ -347,85 +350,53 @@
     </div>
 
     <script>
-        let codigoAleatorio = "";
-        let usuarioDigitado = "";
-        let posicoesTravadas = false;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const sessaoSalva = localStorage.getItem('habbo_session');
-            if (sessaoSalva) {
-                try {
-                    const dados = JSON.parse(sessaoSalva);
-                    carregarHUD(dados);
-                } catch (e) {
-                    localStorage.removeItem('habbo_session');
-                }
-            }
-            ativarArrastar('profile-island');
-
-            document.getElementById('btn-gerar').addEventListener('click', gerarCodigo);
-            document.getElementById('btn-verificar').addEventListener('click', verificarLogin);
-            document.getElementById('btn-voltar').addEventListener('click', voltarPasso1);
-            document.getElementById('btn-copiar').addEventListener('click', copiarCodigo);
-        });
+        var codigoAleatorio = "";
+        var usuarioDigitado = "";
+        var posicoesTravadas = false;
 
         function gerarCodigo() {
-            const inputEl = document.getElementById('usuario-input');
+            var inputEl = document.getElementById('usuario-input');
             usuarioDigitado = inputEl ? inputEl.value.trim() : "";
-            const msg = document.getElementById('login-msg');
+            var msg = document.getElementById('login-msg');
 
             if (!usuarioDigitado) {
-                msg.style.color = '#dc2626';
-                msg.innerText = "Informe o seu nick!";
+                if (msg) {
+                    msg.style.color = '#f87171';
+                    msg.innerText = "Informe o seu nick!";
+                }
                 return;
             }
 
             codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('codigo-gerado').innerText = codigoAleatorio;
+            var codBox = document.getElementById('codigo-gerado');
+            if (codBox) codBox.innerText = codigoAleatorio;
 
             document.getElementById('login-passo-1').classList.add('hidden');
             document.getElementById('login-passo-2').classList.remove('hidden');
-            msg.innerText = "";
+            if (msg) msg.innerText = "";
         }
 
         function copiarCodigo() {
-            const btnCopiar = document.getElementById('btn-copiar');
-            navigator.clipboard.writeText(codigoAleatorio).then(() => {
-                btnCopiar.innerText = "Copiado!";
-                btnCopiar.style.background = "#16a34a";
-                setTimeout(() => {
-                    btnCopiar.innerText = "Copiar";
-                    btnCopiar.style.background = "#0284c7";
-                }, 2000);
-            }).catch(() => {
-                btnCopiar.innerText = "Erro";
-            });
-        }
+            var btnCopiar = document.getElementById('btn-copiar');
+            if (!codigoAleatorio) return;
 
-        function voltarPasso1() {
-            document.getElementById('login-passo-2').classList.add('hidden');
-            document.getElementById('login-passo-1').classList.remove('hidden');
-            document.getElementById('login-msg').innerText = "";
-        }
-
-        async function verificarLogin() {
-            const msg = document.getElementById('login-msg');
-            msg.style.color = '#0284c7';
-            msg.innerText = "Consultando Habbo...";
-
-            try {
-                const res = await fetch('/api/verificar-habbo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAleatorio })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.sucesso) {
-                    if (document.getElementById('manter-conectado').checked) {
-                        localStorage.setItem('habbo_session', JSON.stringify(data.dadosHabbo));
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codigoAleatorio).then(function() {
+                    if (btnCopiar) {
+                        btnCopiar.innerText = "Copiado!";
+                        btnCopiar.style.background = "#16a34a";
+                        setTimeout(function() {
+                            btnCopiar.innerText = "Copiar";
+                            btnCopiar.style.background = "#0284c7";
+                        }, 2000);
                     }
-                    carregarHUD(data.dadosHabbo);
-                } else {
-                    msg.style.color = '#dc2
+                });
+            } else {
+                var tempInput = document.createElement("input");
+                tempInput.value = codigoAleatorio;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                if (btnCopiar) {
+                    btnCopiar.innerText = "Copiado

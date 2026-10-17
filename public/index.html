@@ -255,17 +255,17 @@
                 <label style="font-size: 11px; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
                     <input type="checkbox" id="manter-conectado"> Manter conectado
                 </label>
-                <button class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px;" onclick="gerarCodigo()">Gerar Código</button>
+                <button type="button" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px;" onclick="gerarCodigo()">Gerar Código</button>
             </div>
 
             <div id="login-passo-2" class="hidden">
                 <p style="font-size: 11px; color: #475569;">Cole o código na sua <b>missão (motto)</b>:</p>
                 <div id="codigo-gerado" class="code-box">RPG-0000</div>
-                <button class="hud-btn" style="width: 100%; padding: 10px;" onclick="verificarLogin()">Confirmar Missão</button>
-                <button class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;" onclick="voltarPasso1()">Voltar</button>
+                <button type="button" class="hud-btn" style="width: 100%; padding: 10px;" onclick="verificarLogin()">Confirmar Missão</button>
+                <button type="button" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;" onclick="voltarPasso1()">Voltar</button>
             </div>
 
-            <p id="login-msg" style="font-size: 11px; margin-top: 8px;"></p>
+            <p id="login-msg" style="font-size: 11px; margin-top: 8px; font-weight: bold;"></p>
         </div>
 
         <!-- ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) -->
@@ -275,4 +275,84 @@
                     <img id="avatar-img" src="" alt="Avatar" style="margin-top: -15px;">
                 </div>
                 <div>
-                    <div id
+                    <div id="profile-name" class="profile-name">-JAVA-</div>
+                    <div style="font-size: 10px; color: #0284c7; font-weight: bold;">OFICIAL ATIVO</div>
+                </div>
+            </div>
+
+            <!-- BARRAS DE STATUS -->
+            <div class="status-group">
+                <div class="status-bar-container">
+                    <div class="status-label"><span>Moedas / Salário</span><span>75%</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-coins"></div></div>
+                </div>
+
+                <div class="status-bar-container">
+                    <div class="status-label"><span>Nível XP</span><span>Lvl 6</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-level"></div></div>
+                </div>
+
+                <div class="status-bar-container">
+                    <div class="status-label"><span id="profile-motto">Missão: [P3] Agente</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-mission"></div></div>
+                </div>
+            </div>
+
+            <!-- MINI ABA DE ESTATÍSTICAS -->
+            <div class="stats-mini-box">
+                <div class="stat-item">
+                    <div>ONLINE</div>
+                    <div id="stat-online" class="stat-val">1</div>
+                </div>
+                <div class="stat-item">
+                    <div>CADASTRADOS</div>
+                    <div id="stat-total" class="stat-val">1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let codigoAleatorio = "";
+        let usuarioDigitado = "";
+        let posicoesTravadas = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sessaoSalva = localStorage.getItem('habbo_session');
+            if (sessaoSalva) {
+                try {
+                    const dados = JSON.parse(sessaoSalva);
+                    carregarHUD(dados);
+                } catch (e) {
+                    localStorage.removeItem('habbo_session');
+                }
+            }
+            ativarArrastar('profile-island');
+        });
+
+        function gerarCodigo() {
+            const inputEl = document.getElementById('usuario-input');
+            usuarioDigitado = inputEl ? inputEl.value.trim() : "";
+            const msg = document.getElementById('login-msg');
+
+            if (!usuarioDigitado) {
+                msg.style.color = '#dc2626';
+                msg.innerText = "Informe o seu nick!";
+                return;
+            }
+
+            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('codigo-gerado').innerText = codigoAleatorio;
+
+            document.getElementById('login-passo-1').classList.add('hidden');
+            document.getElementById('login-passo-2').classList.remove('hidden');
+            msg.innerText = "";
+        }
+
+        function voltarPasso1() {
+            document.getElementById('login-passo-2').classList.add('hidden');
+            document.getElementById('login-passo-1').classList.remove('hidden');
+            document.getElementById('login-msg').innerText = "";
+        }
+
+        async function verificarLogin() {

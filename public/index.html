@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Polícia - Cyber HUD</title>
+    <title>RPG Polícia - Painel Principal</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,113 +14,115 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: transparent; /* Permite fundo invisível/overlay */
-            color: #f8fafc;
+            background: transparent;
+            color: #1e293b;
             overflow: hidden;
             height: 100vh;
         }
 
-        /* BARRA SUPERIOR FLUTUANTE (TOP BAR) */
+        /* BARRA SUPERIOR FLUTUANTE */
         .top-bar {
             position: fixed;
-            top: 10px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
             padding: 6px 16px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             z-index: 1000;
         }
 
         .hud-btn {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            color: #38bdf8;
-            padding: 6px 14px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 6px 12px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .hud-btn:hover {
-            background: #0284c7;
-            color: #ffffff;
-            border-color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            background: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .hud-btn.lock-status {
+            background: #fef08a;
+            color: #854d0e;
+            border-color: #fde047;
         }
 
         .hud-btn.logout {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border-color: rgba(239, 68, 68, 0.4);
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
         }
 
         .hud-btn.logout:hover {
-            background: #ef4444;
+            background: #f87171;
             color: white;
         }
 
-        /* CONTAINER PRINCIPAL / OVERLAY */
+        /* CONTAINER HUD */
         .hud-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Permite clicar através das áreas vazias */
+            pointer-events: none;
         }
 
         .interactive-panel {
-            pointer-events: auto; /* Reativa cliques nas ilhas */
+            pointer-events: auto;
         }
 
-        /* CARD DE LOGIN FLUTUANTE */
+        /* LOGIN OVERLAY */
         .login-overlay {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 189, 248, 0.4);
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 12px;
             padding: 24px;
             width: 320px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             z-index: 2000;
         }
 
         .login-overlay h3 {
             margin-top: 0;
-            color: #38bdf8;
+            color: #0284c7;
             font-size: 18px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         input[type="text"] {
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            background: rgba(30, 41, 59, 0.9);
-            border: 1px solid #475569;
-            color: #fff;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
             border-radius: 6px;
             text-align: center;
         }
 
         .code-box {
-            background: rgba(51, 65, 85, 0.8);
-            border: 1px dashed #facc15;
-            color: #facc15;
+            background: #fef9c3;
+            border: 1px dashed #ca8a04;
+            color: #854d0e;
             padding: 8px;
             font-weight: bold;
             letter-spacing: 2px;
@@ -128,18 +130,18 @@
             margin: 10px 0;
         }
 
-        /* ILHA DO PERFIL (ESQUERDA) */
+        /* ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) */
         .profile-island {
             position: fixed;
-            top: 70px;
-            left: 15px;
+            top: 80px;
+            left: 20px;
             width: 260px;
-            background: rgba(15, 23, 42, 0.88);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 10px;
             padding: 14px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            cursor: move;
         }
 
         .profile-header {
@@ -152,9 +154,9 @@
         .profile-avatar {
             width: 54px;
             height: 54px;
-            background: rgba(30, 41, 59, 0.6);
+            background: #e2e8f0;
             border-radius: 8px;
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            border: 1px solid #cbd5e1;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -164,7 +166,7 @@
         .profile-name {
             font-weight: bold;
             font-size: 15px;
-            color: #f8fafc;
+            color: #0f172a;
         }
 
         /* BARRAS DE STATUS */
@@ -172,7 +174,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .status-bar-container {
@@ -182,17 +184,17 @@
         .status-label {
             display: flex;
             justify-content: space-between;
-            color: #94a3b8;
+            color: #64748b;
             margin-bottom: 3px;
         }
 
         .bar-bg {
             width: 100%;
             height: 8px;
-            background: rgba(30, 41, 59, 0.8);
+            background: #e2e8f0;
             border-radius: 4px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid #cbd5e1;
         }
 
         .bar-fill {
@@ -201,20 +203,20 @@
             transition: width 0.4s ease;
         }
 
-        .fill-coins { background: linear-gradient(90deg, #eab308, #facc15); width: 75%; }
-        .fill-level { background: linear-gradient(90deg, #a855f7, #c084fc); width: 45%; }
-        .fill-mission { background: linear-gradient(90deg, #0284c7, #38bdf8); width: 100%; }
+        .fill-coins { background: #eab308; width: 80%; }
+        .fill-level { background: #a855f7; width: 60%; }
+        .fill-mission { background: #0284c7; width: 100%; }
 
         /* MINI ABA DE ESTATÍSTICAS */
         .stats-mini-box {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(148, 163, 184, 0.15);
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
             padding: 8px 10px;
             font-size: 11px;
             display: flex;
             justify-content: space-between;
-            color: #cbd5e1;
+            color: #334155;
         }
 
         .stat-item {
@@ -223,7 +225,7 @@
 
         .stat-val {
             font-weight: bold;
-            color: #38bdf8;
+            color: #0284c7;
             font-size: 13px;
         }
 
@@ -232,171 +234,45 @@
 </head>
 <body>
 
-    <!-- BARRA SUPERIOR FLUTUANTE (TOP BAR) -->
+    <!-- BARRA SUPERIOR FLUTUANTE -->
     <div id="top-bar" class="top-bar interactive-panel hidden">
         <button class="hud-btn" onclick="abrirAba('novidades')">Novidades</button>
         <button class="hud-btn" onclick="abrirAba('apostilas')">Apostilas</button>
         <button class="hud-btn" onclick="abrirAba('instrutor')">Instrutor</button>
         <button class="hud-btn" onclick="abrirAba('estatuto')">Estatuto</button>
+        <button id="btn-lock" class="hud-btn lock-status" onclick="alternarBloqueio()">Destravado</button>
         <button class="hud-btn logout" onclick="logout()">Sair</button>
     </div>
 
     <div class="hud-container">
         <!-- TELA DE LOGIN OVERLAY -->
         <div id="login-overlay" class="login-overlay interactive-panel">
-            <h3>CYBER HUD - LOGIN</h3>
-            <p style="font-size: 12px; color: #94a3b8;">Autenticação via Missão Habbo</p>
+            <h3>RPG Polícia - Acesso</h3>
+            <p style="font-size: 12px; color: #64748b;">Autenticação via Missão Habbo</p>
 
             <div id="login-passo-1">
                 <input type="text" id="usuario-input" placeholder="Seu Nick no Habbo">
-                <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
-                    <input type="checkbox" id="manter-conectado"> Manter conectado neste navegador
+                <label style="font-size: 11px; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
+                    <input type="checkbox" id="manter-conectado"> Manter conectado
                 </label>
-                <button class="hud-btn" style="width: 100%; margin-top: 5px;" onclick="gerarCodigo()">Gerar Código</button>
+                <button class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px;" onclick="gerarCodigo()">Gerar Código</button>
             </div>
 
             <div id="login-passo-2" class="hidden">
-                <p style="font-size: 11px; color: #cbd5e1;">Cole o código na sua <b>missão (motto)</b>:</p>
+                <p style="font-size: 11px; color: #475569;">Cole o código na sua <b>missão (motto)</b>:</p>
                 <div id="codigo-gerado" class="code-box">RPG-0000</div>
-                <button class="hud-btn" style="width: 100%;" onclick="verificarLogin()">Confirmar Missão</button>
-                <button class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8;" onclick="voltarPasso1()">Voltar</button>
+                <button class="hud-btn" style="width: 100%; padding: 10px;" onclick="verificarLogin()">Confirmar Missão</button>
+                <button class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;" onclick="voltarPasso1()">Voltar</button>
             </div>
 
             <p id="login-msg" style="font-size: 11px; margin-top: 8px;"></p>
         </div>
 
-        <!-- ILHA DO PERFIL (FLUTUANTE ESQUERDA) -->
+        <!-- ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) -->
         <div id="profile-island" class="profile-island interactive-panel hidden">
             <div class="profile-header">
                 <div class="profile-avatar">
                     <img id="avatar-img" src="" alt="Avatar" style="margin-top: -15px;">
                 </div>
                 <div>
-                    <div id="profile-name" class="profile-name">-JAVA-</div>
-                    <div style="font-size: 10px; color: #38bdf8;">OFICIAL ATIVO</div>
-                </div>
-            </div>
-
-            <!-- BARRAS DE STATUS -->
-            <div class="status-group">
-                <div class="status-bar-container">
-                    <div class="status-label"><span>Moedas/Salário</span><span>75%</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-coins"></div></div>
-                </div>
-
-                <div class="status-bar-container">
-                    <div class="status-label"><span>Nível XP</span><span>Lvl 6</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-level"></div></div>
-                </div>
-
-                <div class="status-bar-container">
-                    <div class="status-label"><span id="profile-motto">Missão: [P3] Agente</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-mission"></div></div>
-                </div>
-            </div>
-
-            <!-- MINI ABA DE ESTATÍSTICAS -->
-            <div class="stats-mini-box">
-                <div class="stat-item">
-                    <div>ONLINE</div>
-                    <div id="stat-online" class="stat-val">1</div>
-                </div>
-                <div class="stat-item">
-                    <div>CADASTRADOS</div>
-                    <div id="stat-total" class="stat-val">14</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let codigoAleatorio = "";
-        let usuarioDigitado = "";
-
-        // Tentar Login Automático no carregamento
-        window.onload = () => {
-            const sessaoSalva = localStorage.getItem('habbo_session');
-            if (sessaoSalva) {
-                const dados = JSON.parse(sessaoSalva);
-                carregarHUD(dados);
-            }
-        };
-
-        function gerarCodigo() {
-            usuarioDigitado = document.getElementById('usuario-input').value.trim();
-            const msg = document.getElementById('login-msg');
-
-            if (!usuarioDigitado) {
-                msg.style.color = '#f87171';
-                msg.innerText = "Informe seu nick!";
-                return;
-            }
-
-            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('codigo-gerado').innerText = codigoAleatorio;
-
-            document.getElementById('login-passo-1').classList.add('hidden');
-            document.getElementById('login-passo-2').classList.remove('hidden');
-            msg.innerText = "";
-        }
-
-        function voltarPasso1() {
-            document.getElementById('login-passo-2').classList.add('hidden');
-            document.getElementById('login-passo-1').classList.remove('hidden');
-            document.getElementById('login-msg').innerText = "";
-        }
-
-        async function verificarLogin() {
-            const msg = document.getElementById('login-msg');
-            msg.style.color = '#38bdf8';
-            msg.innerText = "Consultando Habbo...";
-
-            try {
-                const res = await fetch('/api/verificar-habbo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAleatorio })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.sucesso) {
-                    // Se marcar "Manter Conectado", salva no LocalStorage
-                    if (document.getElementById('manter-conectado').checked) {
-                        localStorage.setItem('habbo_session', JSON.stringify(data.dadosHabbo));
-                    }
-                    carregarHUD(data.dadosHabbo);
-                } else {
-                    msg.style.color = '#f87171';
-                    msg.innerText = data.erro || "Código não encontrado na missão.";
-                }
-            } catch (err) {
-                msg.style.color = '#f87171';
-                msg.innerText = "Erro ao conectar ao servidor.";
-            }
-        }
-
-        function carregarHUD(dados) {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('top-bar').classList.remove('hidden');
-            document.getElementById('profile-island').classList.remove('hidden');
-
-            document.getElementById('profile-name').innerText = dados.nome;
-            document.getElementById('profile-motto').innerText = `Missão: ${dados.missao}`;
-            document.getElementById('avatar-img').src = `https://www.habbo.com.br/habbo-imaging/avatarimage?figure=${dados.avatar}&direction=2&head_direction=2&action=std&size=m`;
-        }
-
-        function logout() {
-            localStorage.removeItem('habbo_session');
-            document.getElementById('top-bar').classList.add('hidden');
-            document.getElementById('profile-island').classList.add('hidden');
-            document.getElementById('login-overlay').classList.remove('hidden');
-            voltarPasso1();
-        }
-
-        function abrirAba(nome) {
-            alert("Aba " + nome.toUpperCase() + " em desenvolvimento!");
-        }
-    </script>
-</body>
-</html>
+                    <div id

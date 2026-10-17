@@ -10,7 +10,7 @@
             user-select: none;
         }
 
-        /* FUNDO TOTALMENTE TRANSPARENTE PARA EXTENSÕES E OVERLAYS */
+        /* FUNDO TOTALMENTE TRANSPARENTE PARA OVERLAYS */
         html, body {
             background: transparent !important;
             margin: 0;
@@ -98,7 +98,7 @@
             border: 1px solid #334155;
             border-radius: 12px;
             padding: 24px;
-            width: 320px;
+            width: 330px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             z-index: 2000;
@@ -163,6 +163,33 @@
 
         .copy-btn:hover {
             background: #0369a1;
+        }
+
+        /* BALÃO E PERSONAGEM FRANK */
+        .frank-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 12px;
+            text-align: left;
+        }
+
+        .frank-img {
+            width: 42px;
+            height: 52px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .frank-bubble {
+            font-size: 11px;
+            line-height: 1.3;
+            color: #e2e8f0;
+            font-weight: 500;
         }
 
         /* ILHA DO PERFIL (CINZA CLARO) */
@@ -305,7 +332,11 @@
                 <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;">Voltar</button>
             </div>
 
-            <p id="login-msg" style="font-size: 11px; margin-top: 8px; font-weight: bold;"></p>
+            <!-- QUADRO DO FRANK AVISANDO ERROS E DICAS -->
+            <div id="frank-box" class="frank-container hidden">
+                <img src="https://images.habbo.com/c_images/album1584/FRANK_SAY.png" alt="Frank Habbo" class="frank-img">
+                <div id="frank-msg" class="frank-bubble">Seja bem-vindo, oficial! Digite seu nick acima.</div>
+            </div>
         </div>
 
         <!-- ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) -->
@@ -357,16 +388,22 @@
         var usuarioDigitado = "";
         var posicoesTravadas = false;
 
+        function falarFrank(texto, eErro) {
+            var frankBox = document.getElementById('frank-box');
+            var frankMsg = document.getElementById('frank-msg');
+            if (frankBox && frankMsg) {
+                frankBox.classList.remove('hidden');
+                frankMsg.innerText = texto;
+                frankMsg.style.color = eErro ? '#f87171' : '#38bdf8';
+            }
+        }
+
         window.gerarCodigo = function() {
             var inputEl = document.getElementById('usuario-input');
             usuarioDigitado = inputEl ? inputEl.value.trim() : "";
-            var msg = document.getElementById('login-msg');
 
             if (!usuarioDigitado) {
-                if (msg) {
-                    msg.style.color = '#f87171';
-                    msg.innerText = "Informe o seu nick!";
-                }
+                falarFrank("Oops! Você precisa digitar o seu nick do Habbo para continuar.", true);
                 return;
             }
 
@@ -376,7 +413,7 @@
 
             document.getElementById('login-passo-1').classList.add('hidden');
             document.getElementById('login-passo-2').classList.remove('hidden');
-            if (msg) msg.innerText = "";
+            falarFrank("Agora copie o código acima e cole na missão do seu perfil no Habbo!", false);
         };
 
         window.copiarCodigo = function() {
@@ -415,125 +452,4 @@
         window.voltarPasso1 = function() {
             document.getElementById('login-passo-2').classList.add('hidden');
             document.getElementById('login-passo-1').classList.remove('hidden');
-            var msg = document.getElementById('login-msg');
-            if (msg) msg.innerText = "";
-        };
-
-        window.verificarLogin = async function() {
-            var msg = document.getElementById('login-msg');
-            if (msg) {
-                msg.style.color = '#38bdf8';
-                msg.innerText = "Consultando Habbo...";
-            }
-
-            try {
-                var res = await fetch('/api/verificar-habbo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAleatorio })
-                });
-
-                var data = await res.json();
-
-                if (res.ok && data.sucesso) {
-                    var chk = document.getElementById('manter-conectado');
-                    if (chk && chk.checked) {
-                        localStorage.setItem('habbo_session', JSON.stringify(data.dadosHabbo));
-                    }
-                    carregarHUD(data.dadosHabbo);
-                } else {
-                    if (msg) {
-                        msg.style.color = '#f87171';
-                        msg.innerText = data.erro || "Código não encontrado na missão.";
-                    }
-                }
-            } catch (err) {
-                if (msg) {
-                    msg.style.color = '#f87171';
-                    msg.innerText = "Erro ao conectar ao servidor.";
-                }
-            }
-        };
-
-        function carregarHUD(dados) {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('top-bar').classList.remove('hidden');
-            document.getElementById('profile-island').classList.remove('hidden');
-
-            document.getElementById('profile-name').innerText = dados.nome;
-            document.getElementById('profile-motto').innerText = `Missão: ${dados.missao}`;
-            document.getElementById('avatar-img').src = `https://www.habbo.com.br/habbo-imaging/avatarimage?figure=${dados.avatar}&direction=2&head_direction=2&action=std&size=m`;
-        }
-
-        window.logout = function() {
-            localStorage.removeItem('habbo_session');
-            document.getElementById('top-bar').classList.add('hidden');
-            document.getElementById('profile-island').classList.add('hidden');
-            document.getElementById('login-overlay').classList.remove('hidden');
-            voltarPasso1();
-        };
-
-        window.alternarBloqueio = function() {
-            posicoesTravadas = !posicoesTravadas;
-            var btn = document.getElementById('btn-lock');
-            if (posicoesTravadas) {
-                btn.innerText = "Travado";
-                btn.style.background = "#dcfce7";
-                btn.style.color = "#15803d";
-                btn.style.borderColor = "#bbf7d0";
-            } else {
-                btn.innerText = "Destravado";
-                btn.style.background = "#fef08a";
-                btn.style.color = "#854d0e";
-                btn.style.borderColor = "#fde047";
-            }
-        };
-
-        function ativarArrastar(idElemento) {
-            var elmnt = document.getElementById(idElemento);
-            if (!elmnt) return;
-            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-            elmnt.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                if (posicoesTravadas) return;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                if (posicoesTravadas) return;
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
-        }
-
-        window.abrirAba = function(nome) {
-            alert("Aba " + nome.toUpperCase() + " em desenvolvimento!");
-        };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var btnGerar = document.getElementById('btn-gerar');
-            if (btnGerar) btnGerar.addEventListener('click', window.gerarCodigo);
-
-            var btnCopiar = document.getElementById('btn-copiar');
-            if (btnCopiar) btnCopiar.addEventListener('click', window.copiarCodigo);
-
-            var btnVerificar = document.getElementById('btn-verificar');
-            if (btnVerificar) btnVerificar.addEventListener('click', window.verificarLogin);
-
-            var btnVoltar = document.getElementById('btn-voltar');
+            falarFrank("

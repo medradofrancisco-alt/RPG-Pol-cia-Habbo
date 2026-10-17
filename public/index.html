@@ -10,12 +10,17 @@
             user-select: none;
         }
 
-        /* FUNDO TOTALMENTE TRANSPARENTE PARA OVERLAYS */
+        /* FUNDO CINZA ESTILO WIRED / TEMÁTICO HABBO */
         html, body {
-            background: transparent !important;
+            background-color: #1e293b !important;
+            background-image: 
+                radial-gradient(#334155 1px, transparent 1px), 
+                radial-gradient(#334155 1px, #1e293b 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
             margin: 0;
             padding: 0;
-            color: #0f172a;
+            color: #f8fafc;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
@@ -35,7 +40,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             z-index: 1000;
         }
 
@@ -81,26 +86,25 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            background: transparent !important;
         }
 
         .interactive-panel {
             pointer-events: auto;
         }
 
-        /* CARD DE LOGIN (CINZA ESCURO) */
+        /* CARD DE LOGIN (CINZA ESCURO / SLATE WIRED) */
         .login-overlay {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1e293b;
-            border: 1px solid #334155;
+            background: #0f172a;
+            border: 2px solid #334155;
             border-radius: 12px;
             padding: 24px;
-            width: 330px;
+            width: 340px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             z-index: 2000;
             color: #f8fafc;
         }
@@ -116,16 +120,18 @@
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            background: #0f172a;
+            background: #1e293b;
             border: 1px solid #475569;
             color: #f8fafc;
             border-radius: 6px;
             text-align: center;
-            font-weight: 500;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         input[type="text"]::placeholder {
             color: #94a3b8;
+            font-weight: normal;
         }
 
         /* CAIXA DE CÓDIGO (TEXTO COPIÁVEL + BOTÃO) */
@@ -133,7 +139,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #0f172a;
+            background: #1e293b;
             border: 1px dashed #38bdf8;
             border-radius: 6px;
             padding: 6px 10px;
@@ -165,30 +171,41 @@
             background: #0369a1;
         }
 
-        /* BALÃO E PERSONAGEM FRANK */
+        /* BALÃO E PERSONAGEM FRANK HABBO */
         .frank-container {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #0f172a;
+            background: #1e293b;
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 8px;
             margin-top: 12px;
             text-align: left;
+            overflow: hidden;
+        }
+
+        .frank-avatar-wrap {
+            width: 48px;
+            height: 52px;
+            background: #0f172a;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .frank-img {
-            width: 42px;
-            height: 52px;
-            object-fit: contain;
-            flex-shrink: 0;
+            margin-top: -15px;
         }
 
         .frank-bubble {
             font-size: 11px;
             line-height: 1.3;
-            color: #e2e8f0;
+            color: #38bdf8;
             font-weight: 500;
         }
 
@@ -307,7 +324,7 @@
     </div>
 
     <div class="hud-container">
-        <!-- TELA DE LOGIN OVERLAY (CINZA ESCURO) -->
+        <!-- TELA DE LOGIN OVERLAY (CINZA ESCURO / WIRED) -->
         <div id="login-overlay" class="login-overlay interactive-panel">
             <h3>RPG Polícia - Acesso</h3>
             <p style="font-size: 12px; color: #94a3b8;">Autenticação via Missão Habbo</p>
@@ -317,7 +334,7 @@
                 <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0; cursor: pointer;">
                     <input type="checkbox" id="manter-conectado"> Manter conectado
                 </label>
-                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;" onclick="gerarCodigo()">Gerar Código</button>
+                <button type="button" id="btn-gerar" class="hud-btn" style="width: 100%; margin-top: 5px; padding: 10px; background: #0284c7; color: white; border: none;">Gerar Código</button>
             </div>
 
             <div id="login-passo-2" class="hidden">
@@ -325,16 +342,18 @@
                 
                 <div class="code-container">
                     <span id="codigo-gerado" class="code-box">RPG-0000</span>
-                    <button type="button" id="btn-copiar" class="copy-btn" onclick="copiarCodigo()">Copiar</button>
+                    <button type="button" id="btn-copiar" class="copy-btn">Copiar</button>
                 </div>
 
-                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;" onclick="verificarLogin()">Confirmar Missão</button>
-                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;" onclick="voltarPasso1()">Voltar</button>
+                <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px; background: #0284c7; color: white; border: none;">Confirmar Missão</button>
+                <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #94a3b8; border: none;">Voltar</button>
             </div>
 
-            <!-- QUADRO DO FRANK AVISANDO ERROS E DICAS -->
+            <!-- QUADRO DO FRANK HABBO COM IMAGEM OFICIAL FUNCIONAL -->
             <div id="frank-box" class="frank-container">
-                <img src="https://images.habbo.com/c_images/album1584/FRANK_SAY.png" alt="Frank Habbo" class="frank-img">
+                <div class="frank-avatar-wrap">
+                    <img src="https://www.habbo.com.br/habbo-imaging/avatarimage?user=Frank&direction=2&head_direction=2&action=std&size=m" alt="Frank Habbo" class="frank-img">
+                </div>
                 <div id="frank-msg" class="frank-bubble">Seja bem-vindo, oficial! Digite seu nick do Habbo acima para começar.</div>
             </div>
         </div>
@@ -370,95 +389,3 @@
             </div>
 
             <!-- MINI ABA DE ESTATÍSTICAS -->
-            <div class="stats-mini-box">
-                <div class="stat-item">
-                    <div>ONLINE</div>
-                    <div id="stat-online" class="stat-val">1</div>
-                </div>
-                <div class="stat-item">
-                    <div>CADASTRADOS</div>
-                    <div id="stat-total" class="stat-val">1</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        var codigoAleatorio = "";
-        var usuarioDigitado = "";
-        var posicoesTravadas = false;
-
-        function falarFrank(texto, eErro) {
-            var frankBox = document.getElementById('frank-box');
-            var frankMsg = document.getElementById('frank-msg');
-            if (frankBox && frankMsg) {
-                frankMsg.innerText = texto;
-                frankMsg.style.color = eErro ? '#f87171' : '#38bdf8';
-            }
-        }
-
-        function gerarCodigo() {
-            var inputEl = document.getElementById('usuario-input');
-            usuarioDigitado = inputEl ? inputEl.value.trim() : "";
-
-            if (!usuarioDigitado) {
-                falarFrank("Oops! Você precisa digitar o seu nick do Habbo para continuar.", true);
-                return;
-            }
-
-            codigoAleatorio = "RPG-" + Math.floor(1000 + Math.random() * 9000);
-            var codBox = document.getElementById('codigo-gerado');
-            if (codBox) codBox.innerText = codigoAleatorio;
-
-            document.getElementById('login-passo-1').classList.add('hidden');
-            document.getElementById('login-passo-2').classList.remove('hidden');
-            falarFrank("Agora copie o código acima e cole na sua missão do Habbo!", false);
-        }
-
-        function copiarCodigo() {
-            var btnCopiar = document.getElementById('btn-copiar');
-            if (!codigoAleatorio) return;
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(codigoAleatorio).then(function() {
-                    if (btnCopiar) {
-                        btnCopiar.innerText = "Copiado!";
-                        btnCopiar.style.background = "#16a34a";
-                        setTimeout(function() {
-                            btnCopiar.innerText = "Copiar";
-                            btnCopiar.style.background = "#0284c7";
-                        }, 2000);
-                    }
-                });
-            } else {
-                var tempInput = document.createElement("input");
-                tempInput.value = codigoAleatorio;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
-                if (btnCopiar) {
-                    btnCopiar.innerText = "Copiado!";
-                    btnCopiar.style.background = "#16a34a";
-                    setTimeout(function() {
-                        btnCopiar.innerText = "Copiar";
-                        btnCopiar.style.background = "#0284c7";
-                    }, 2000);
-                }
-            }
-        }
-
-        function voltarPasso1() {
-            document.getElementById('login-passo-2').classList.add('hidden');
-            document.getElementById('login-passo-1').classList.remove('hidden');
-            falarFrank("Digite seu nick do Habbo para iniciar o acesso.", false);
-        }
-
-        async function verificarLogin() {
-            falarFrank("Aguarde... Estou consultando os registros do Habbo!", false);
-
-            try {
-                var res = await fetch('/api/verificar-habbo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: usuarioDigitado, codigoEsperado: codigoAle

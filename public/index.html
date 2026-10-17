@@ -14,33 +14,34 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: transparent;
-            color: #1e293b;
+            /* Fundo Azul Bebê suave para o overlay */
+            background: #e0f2fe; 
+            color: #0f172a;
             overflow: hidden;
             height: 100vh;
         }
 
-        /* BARRA SUPERIOR FLUTUANTE */
+        /* BARRA SUPERIOR FLUTUANTE (CINZA CLARO) */
         .top-bar {
             position: fixed;
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: #f8fafc;
+            background: #f1f5f9;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             padding: 6px 16px;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             z-index: 1000;
         }
 
         .hud-btn {
             background: #e2e8f0;
             border: 1px solid #cbd5e1;
-            color: #334155;
+            color: #1e293b;
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 12px;
@@ -67,7 +68,7 @@
         }
 
         .hud-btn.logout:hover {
-            background: #f87171;
+            background: #ef4444;
             color: white;
         }
 
@@ -85,19 +86,19 @@
             pointer-events: auto;
         }
 
-        /* LOGIN OVERLAY */
+        /* CARD DE LOGIN (CINZA CLARO) */
         .login-overlay {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #f8fafc;
+            background: #f1f5f9;
             border: 1px solid #cbd5e1;
             border-radius: 12px;
             padding: 24px;
             width: 320px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
             z-index: 2000;
         }
 
@@ -117,30 +118,57 @@
             color: #0f172a;
             border-radius: 6px;
             text-align: center;
+            font-weight: 500;
         }
 
-        .code-box {
-            background: #fef9c3;
-            border: 1px dashed #ca8a04;
-            color: #854d0e;
-            padding: 8px;
-            font-weight: bold;
-            letter-spacing: 2px;
+        /* CAIXA DE CÓDIGO (TEXTO COPIÁVEL + BOTÃO) */
+        .code-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #e2e8f0;
+            border: 1px dashed #0284c7;
             border-radius: 6px;
+            padding: 6px 10px;
             margin: 10px 0;
         }
 
-        /* ILHA DO PERFIL (FLUTUANTE E ARRASTÁVEL) */
+        .code-box {
+            color: #0369a1;
+            font-weight: bold;
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            user-select: text !important; /* Permite selecionar o texto */
+            cursor: text;
+        }
+
+        .copy-btn {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #0369a1;
+        }
+
+        /* ILHA DO PERFIL (CINZA CLARO) */
         .profile-island {
             position: fixed;
             top: 80px;
             left: 20px;
             width: 260px;
-            background: #f8fafc;
+            background: #f1f5f9;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
             padding: 14px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
             cursor: move;
         }
 
@@ -184,7 +212,7 @@
         .status-label {
             display: flex;
             justify-content: space-between;
-            color: #64748b;
+            color: #475569;
             margin-bottom: 3px;
         }
 
@@ -259,8 +287,14 @@
             </div>
 
             <div id="login-passo-2" class="hidden">
-                <p style="font-size: 11px; color: #475569;">Cole o código na sua <b>missão (motto)</b>:</p>
-                <div id="codigo-gerado" class="code-box">RPG-0000</div>
+                <p style="font-size: 11px; color: #475569; margin-bottom: 4px;">Cole o código na sua <b>missão (motto)</b>:</p>
+                
+                <!-- CAIXA COM BOTÃO DE COPIAR E TEXTO SELECIONÁVEL -->
+                <div class="code-container">
+                    <span id="codigo-gerado" class="code-box">RPG-0000</span>
+                    <button type="button" id="btn-copiar" class="copy-btn">Copiar</button>
+                </div>
+
                 <button type="button" id="btn-verificar" class="hud-btn" style="width: 100%; padding: 10px;">Confirmar Missão</button>
                 <button type="button" id="btn-voltar" class="hud-btn" style="width: 100%; margin-top: 5px; background: transparent; color: #64748b; border: none;">Voltar</button>
             </div>
@@ -329,10 +363,10 @@
             }
             ativarArrastar('profile-island');
 
-            // Atribuir eventos diretamente para evitar conflitos de escopo
             document.getElementById('btn-gerar').addEventListener('click', gerarCodigo);
             document.getElementById('btn-verificar').addEventListener('click', verificarLogin);
             document.getElementById('btn-voltar').addEventListener('click', voltarPasso1);
+            document.getElementById('btn-copiar').addEventListener('click', copiarCodigo);
         });
 
         function gerarCodigo() {
@@ -352,6 +386,20 @@
             document.getElementById('login-passo-1').classList.add('hidden');
             document.getElementById('login-passo-2').classList.remove('hidden');
             msg.innerText = "";
+        }
+
+        function copiarCodigo() {
+            const btnCopiar = document.getElementById('btn-copiar');
+            navigator.clipboard.writeText(codigoAleatorio).then(() => {
+                btnCopiar.innerText = "Copiado!";
+                btnCopiar.style.background = "#16a34a";
+                setTimeout(() => {
+                    btnCopiar.innerText = "Copiar";
+                    btnCopiar.style.background = "#0284c7";
+                }, 2000);
+            }).catch(() => {
+                btnCopiar.innerText = "Erro";
+            });
         }
 
         function voltarPasso1() {
@@ -380,85 +428,4 @@
                     }
                     carregarHUD(data.dadosHabbo);
                 } else {
-                    msg.style.color = '#dc2626';
-                    msg.innerText = data.erro || "Código não encontrado na missão.";
-                }
-            } catch (err) {
-                msg.style.color = '#dc2626';
-                msg.innerText = "Erro ao conectar ao servidor.";
-            }
-        }
-
-        function carregarHUD(dados) {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('top-bar').classList.remove('hidden');
-            document.getElementById('profile-island').classList.remove('hidden');
-
-            document.getElementById('profile-name').innerText = dados.nome;
-            document.getElementById('profile-motto').innerText = `Missão: ${dados.missao}`;
-            document.getElementById('avatar-img').src = `https://www.habbo.com.br/habbo-imaging/avatarimage?figure=${dados.avatar}&direction=2&head_direction=2&action=std&size=m`;
-        }
-
-        function logout() {
-            localStorage.removeItem('habbo_session');
-            document.getElementById('top-bar').classList.add('hidden');
-            document.getElementById('profile-island').classList.add('hidden');
-            document.getElementById('login-overlay').classList.remove('hidden');
-            voltarPasso1();
-        }
-
-        function alternarBloqueio() {
-            posicoesTravadas = !posicoesTravadas;
-            const btn = document.getElementById('btn-lock');
-            if (posicoesTravadas) {
-                btn.innerText = "Travado";
-                btn.style.background = "#dcfce7";
-                btn.style.color = "#15803d";
-                btn.style.borderColor = "#bbf7d0";
-            } else {
-                btn.innerText = "Destravado";
-                btn.style.background = "#fef08a";
-                btn.style.color = "#854d0e";
-                btn.style.borderColor = "#fde047";
-            }
-        }
-
-        function ativarArrastar(idElemento) {
-            const elmnt = document.getElementById(idElemento);
-            if (!elmnt) return;
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-            elmnt.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                if (posicoesTravadas) return;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                if (posicoesTravadas) return;
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
-        }
-
-        function abrirAba(nome) {
-            alert("Aba " + nome.toUpperCase() + " em desenvolvimento!");
-        }
-    </script>
-</body>
-</html>
+                    msg.style.color = '#dc2
